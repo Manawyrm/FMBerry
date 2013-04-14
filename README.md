@@ -53,7 +53,7 @@ First update your local package repository with
 ``sudo apt-get update``
 
 then install all needed software with the following command:
-``sudo apt-get install i2c-tools build-essential ``
+``sudo apt-get install i2c-tools build-essential git``
 
 ###Step 3: Finding out your hardware revision
 
@@ -63,4 +63,16 @@ in your terminal.
 
 All Raspberry Pi's with a revision newer than rev. 2 have their i2c port connected up to /dev/i2c-1.
 Older devices (beta, alpha, early 256MB Model B's) have it connected up to /dev/i2c-0. 
+
+###Step 4: Bulding the software
+To build the software execute the following commands (in your homefolder):
+
+``git clone https://github.com/Manawyrm/FMBerry/``
+
+``cd FMBerry``
+
+``make``
+
+Compiling the software will take a couple of seconds.
+###Step 5: Executing the software
 
