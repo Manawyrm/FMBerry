@@ -7,7 +7,10 @@ FMBerry
 
 What is this? 
 -------------
-FMBerry is a piece of software that allows you to transmit FM radio with your Raspberry Pi. 
+FMBerry is a piece of software that allows you to transmit FM radio with your Raspberry Pi.
+
+[YouTube-Video](http://youtu.be/NJRADd7C6rs)
+
 How does it work? 
 -------------
 It uses the Sony-Ericsson MMR-70 transmitter, which was originally intended for use with Sonys Walkman cellphones from early 2000s.
