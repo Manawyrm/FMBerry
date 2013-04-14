@@ -1,3 +1,4 @@
+![FMBerry Logo](http://tbspace.de/holz/uzsjpoghdq.png)
 FMBerry
 =======
 > Written by Tobias Mädel (t.maedel@alfeld.de)
@@ -55,6 +56,16 @@ First update your local package repository with
 then install all needed software with the following command:
 ``sudo apt-get install i2c-tools build-essential git``
 
+Build and install the bcm2835 lib by issuing these commands:
+```
+wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.25.tar.gz
+tar zxvf bcm2835-1.25.tar.gz
+cd bcm2835-1.25
+./configure
+make
+sudo make install
+```
+
 ###Step 3: Finding out your hardware revision
 
 Run 
@@ -83,9 +94,10 @@ If you are not able to see your transmitter please double check your wiring!
 ###Step 5: Building the software
 To build the software execute the following commands (in your homefolder):
 
-``git clone https://github.com/Manawyrm/FMBerry/``
-
-``cd FMBerry``
+```
+git clone https://github.com/Manawyrm/FMBerry/
+cd FMBerry
+```
 
 If you have got an old revision board, please open i2c.c and change the variable fileName to ``/dev/i2c-0``! 
 
