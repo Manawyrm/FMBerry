@@ -80,7 +80,7 @@ You should then see your transmitter at 0x66.
 If you are not able to see your transmitter please double check your wiring! 
 ![Output of i2cdetect](http://tbspace.de/holz/csuqzygpwb.png)
 
-###Step 5: Bulding the software
+###Step 5: Building the software
 To build the software execute the following commands (in your homefolder):
 
 ``git clone https://github.com/Manawyrm/FMBerry/``
