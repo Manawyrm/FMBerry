@@ -65,7 +65,22 @@ All Raspberry Pi's with a revision newer than rev. 2 have their i2c port connect
 
 Older devices (beta, alpha, early 256MB Model B's) have it connected up to /dev/i2c-0. 
 
-###Step 4: Bulding the software
+###Step 4: Checking the hardware
+
+You can check your wiring with the following command:
+
+``i2cdetect -y 1``
+
+Please remember that you need to run the command on another port on older revisions!
+
+``i2cdetect -y 0``
+
+You should then see your transmitter at 0x66. 
+
+If you are not able to see your transmitter please double check your wiring! 
+![Output of i2cdetect](http://tbspace.de/holz/csuqzygpwb.png)
+
+###Step 5: Bulding the software
 To build the software execute the following commands (in your homefolder):
 
 ``git clone https://github.com/Manawyrm/FMBerry/``
