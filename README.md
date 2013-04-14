@@ -20,9 +20,8 @@ What do I need to build this?
 * Soldering equipment (soldering iron and some solder)
 * Cable for connecting to your Raspis GPIO port (old IDE cable does work fine!)
 
-Please head over to 
-http://tbspace.de/fmberry.html
-for detailed building instructions.
+The hardware is explained here:
+[HARDWARE.md](https://github.com/Manawyrm/FMBerry/blob/master/HARDWARE.md#fmberry---hardware)
 
 Installation
 -------------
