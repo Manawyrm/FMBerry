@@ -62,6 +62,7 @@ Run
 in your terminal.
 
 All Raspberry Pi's with a revision newer than rev. 2 have their i2c port connected up to /dev/i2c-1.
+
 Older devices (beta, alpha, early 256MB Model B's) have it connected up to /dev/i2c-0. 
 
 ###Step 4: Bulding the software
