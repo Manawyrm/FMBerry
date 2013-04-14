@@ -87,8 +87,37 @@ To build the software execute the following commands (in your homefolder):
 
 ``cd FMBerry``
 
+If you have got an old revision board, please open i2c.c and change the variable fileName to ``/dev/i2c-0``! 
+
 ``make``
 
 Compiling the software will take a couple of seconds.
-###Step 5: Executing the software
+###Step 6: Executing the software
+FMBerry is essentially a daemon called fmberryd.
 
+You can start it by typing ``sudo ./fmberryd``.
+
+To control the daemon you have to use ctlfmberry.
+
+It currently allows the following commands:
+* ``./ctlfmberry set freq 99000`` -- Frequency in kHz (76000 - 108000)
+* ``./ctlfmberry poweron``
+* ``./ctlfmberry poweroff``
+
+That's it! :)
+###Step 7: Debugging
+FMBerry writes debugging output to /var/log/syslog.
+
+You can watch the information by running ``tail -f /var/log/syslog``.
+
+It will tell you what's wrong. 
+
+##Notes
+* WARNING! I am not a professional C programmer. Please expect this software to have major security flaws such as buffer overflow and similar. Please don't expose it's control port to the internet!
+* The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberryd.h) You can control it by sending the exact same commands you would give to ctlfmberry.
+* For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
+* 
+* The NS741 transmitter is capable of modulating a RDS (station title, song information) signal. 
+* FMBerry does NOT support RDS at the moment. It is however already present and working in it's source files (ns741.c).
+* 
+* Feel free to contact me: t.maedel@alfeld.de
