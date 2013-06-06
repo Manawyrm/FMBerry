@@ -17,5 +17,6 @@
 #define PORT          (42516)
 
 int main(int argc, char **argv);
-int ListenTCP();
+void *TransmitRDS();
+void *ListenTCP();
 #endif
