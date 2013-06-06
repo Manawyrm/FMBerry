@@ -5,7 +5,7 @@ SRC_DAEMON=fmberryd.c ns741.o i2c.o
 all: fmberryd
 
 fmberryd: ns741
-	$(CC) -o $(TARGET_DAEMON) $(SRC_DAEMON) -l bcm2835
+	$(CC) -o $(TARGET_DAEMON) $(SRC_DAEMON) -l bcm2835 -l pthread
 
 ns741: i2c
 	$(CC) -c -o ns741.o ns741.c
