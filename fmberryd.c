@@ -4,9 +4,13 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 /*
 FMBerry - an cheap and easy way of transmitting music with your Pi.
 Written 2013 by Tobias Mädel (t.maedel@alfeld.de)
+
+Versions: 
+06.06.2013 - Added RDS Support
 
 Thanks to Rsoft for helping me preserving my sanity in spite of my non-existant knowledge of C (writing of Makefile and C-Headers)
 Thanks to Paul Griffiths (1999) for his TCP socket helper.
@@ -65,13 +69,43 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	syslog(LOG_NOTICE, "Successfully initialized ns741 transmitter.\n");
+	
+	pthread_t RDSThread, TCPThread;
 
-	ListenTCP();
+	int rc;
+	rc = pthread_create( &RDSThread, NULL, &TransmitRDS, NULL );
+    if( rc != 0 ) {
+        printf("Couldn't create RDS Thread.\n");
+        return EXIT_FAILURE;
+    }
 
+   rc = pthread_create( &TCPThread, NULL, &ListenTCP, NULL );
+    if( rc != 0 ) {
+        printf("Couldn't create TCP Thread.\n");
+        return EXIT_FAILURE;
+    }
+
+    pthread_join( RDSThread, NULL );
+	pthread_join( TCPThread, NULL );
+
+
+}
+void *TransmitRDS(void *arg) 
+{
+    while (1)
+    {
+		// Read interrupt pin. (LOW when waiting for data.)
+		uint8_t value = bcm2835_gpio_lev(RDSINT);
+		if (value == 0)
+		{
+			RDSINT_vect();
+		}
+		delay(10);
+    }
 }
 
 
-int ListenTCP()
+void *ListenTCP(void *arg)
 {
 	/* Socket erstellen - TCP, IPv4, keine Optionen */
 	int lsd = socket(AF_INET, SOCK_STREAM, 0);
@@ -136,6 +170,20 @@ int ListenTCP()
 		{
 			ns741_power(1);
 		}
+		
+		cmd = "set rdstext";
+		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		{
+			ns741_rds_set_radiotext((buffer + 12));
+			//printf((buffer + 12));
+		}
+
+		cmd = "set rdsid";
+		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		{
+			ns741_rds_set_progname((buffer + 10));
+		}
+
 
 		cmd = "die";
 		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
