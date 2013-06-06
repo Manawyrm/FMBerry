@@ -9,7 +9,8 @@ Thanks to Paul Griffiths (1999) for his TCP socket helper.
 */
 
 //                        "----------------------------64----------------------------------"
-char radiotext_text[64] = "Hallo! Besucht tbspace.de                                       ";
+char radiotext_text[64] = "                                                                ";
+// *hrr hrr*              "Twilight Sparkle is best Pony.                                  "
 
 /* 4 RDS 0A Groups containing Program service name */
 uint8_t station_frames[20][3] =
