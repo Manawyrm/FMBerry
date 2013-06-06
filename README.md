@@ -117,6 +117,8 @@ It currently allows the following commands:
 * ``./ctlfmberry set freq 99000`` -- Frequency in kHz (76000 - 108000)
 * ``./ctlfmberry poweron``
 * ``./ctlfmberry poweroff``
+* ``./ctlfmberry set rdsid DEADBEEF`` (8 chars!)
+* ``./ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars)
 
 That's it! :)
 ###Step 7: Debugging
@@ -131,7 +133,5 @@ It will tell you what's wrong.
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberryd.h) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
 * 
-* The NS741 transmitter is capable of modulating a RDS (station title, song information) signal. 
-* FMBerry does NOT support RDS at the moment. It is however already present and working in it's source files (ns741.c).
 * 
 * Feel free to contact me: t.maedel@alfeld.de
