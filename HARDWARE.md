@@ -20,7 +20,8 @@ Begin by simply connecting these pins together:
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
 
-** Very important! **
+__Very important!__
+
 Now you need to disable the internal processor of the transmitter. This can be done easily by shorting on of it's crystal pins.
 To do this **connect TP18 to GND. **
 
