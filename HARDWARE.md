@@ -14,6 +14,8 @@ Thanks to Oliver J. (skriptkiddy) for the schematics and the photo with all labe
 Old IDE or Floppy Cable does an excellent job for connecting to your Pi. 
 Begin by simply connecting these pins together:
 
+* GND -- TP18
+* GND -- TP2 (Thanks to Thomas H. for the note!) 
 * GND -- TP1
 * 3V3 -- TP11
 * SDA -- TP8
@@ -23,7 +25,7 @@ Begin by simply connecting these pins together:
 __Very important!__
 
 Now you need to disable the internal processor of the transmitter. This can be done easily by shorting on of it's crystal pins.
-To do this __connect TP18 to GND.__
+To do this __connect TP18 to GND and TP2 to GND!__
 
 Get yourself an old 3,5" phono plug. I've got mine from an old pair of cellphone speakers. 
 Connect it as following:
