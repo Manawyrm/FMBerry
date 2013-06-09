@@ -23,7 +23,7 @@ Begin by simply connecting these pins together:
 __Very important!__
 
 Now you need to disable the internal processor of the transmitter. This can be done easily by shorting on of it's crystal pins.
-To do this **connect TP18 to GND. **
+To do this __connect TP18 to GND.__
 
 Get yourself an old 3,5" phono plug. I've got mine from an old pair of cellphone speakers. 
 Connect it as following:
