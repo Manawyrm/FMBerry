@@ -20,8 +20,9 @@ Begin by simply connecting these pins together:
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
 
+** Very important! **
 Now you need to disable the internal processor of the transmitter. This can be done easily by shorting on of it's crystal pins.
-To do this connect TP18 to GND. 
+To do this **connect TP18 to GND. **
 
 Get yourself an old 3,5" phono plug. I've got mine from an old pair of cellphone speakers. 
 Connect it as following:
