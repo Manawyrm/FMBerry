@@ -136,3 +136,20 @@ It will tell you what's wrong.
 * You can also stream song information from a music player daemon via https://github.com/Manawyrm/FMBerryRDSMPD
 * 
 * Feel free to contact me: t.maedel@alfeld.de
+
+##Common problems
+__The daemon does not show anything.__
+
+That's normal. You have to use ./ctlfmberry to control the daemon.
+
+__I can't seem to hear music.__
+
+Turn up the volume/unmute your raspi with alsamixer.
+
+__I am getting compile errors.__
+
+Did you install all dependencies? (All lines with apt-get)
+
+__The transmissions dies after a couple of minutes.__
+
+You didn't disable the internal processor of the MMR70. Do this by connecting TP18 to GND.
