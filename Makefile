@@ -17,7 +17,7 @@ clean:
         $(RM) -f *.o $(TARGET_DAEMON)
 
 install:
-        install fmberry.conf /etc/fmberry.conf
+        install  -m 644 fmberry.conf /etc/fmberry.conf
         install fmberryd /usr/local/bin
         install ctlfmberry /usr/local/bin
         install fmberry /etc/init.d
