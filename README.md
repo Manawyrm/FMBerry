@@ -142,7 +142,7 @@ Just run ```git pull``` followed by a ```make``` and a ```sudo make install```.
 
 * You can also stream song information from a music player daemon via https://github.com/Manawyrm/FMBerryRDSMPD
 
-* Feel free to contact me: t.maedel@alfeld.de
+* Feel free to contact me: t.maedel@alfeld.de (english and german) 
 
 ##Common problems
 __The daemon does not show anything.__
