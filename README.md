@@ -56,7 +56,7 @@ First update your local package repository with
 ``sudo apt-get update``
 
 then install all needed software with the following command:
-``sudo apt-get install i2c-tools build-essential git``
+``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
 
 Build and install the bcm2835 lib by issuing these commands:
 ```
@@ -106,35 +106,42 @@ If you have got an old revision board, please open i2c.c and change the variable
 ``make``
 
 Compiling the software will take a couple of seconds.
-###Step 6: Executing the software
+###Step 6: Installing the software
 FMBerry is essentially a daemon called fmberryd.
+To install it into your system path type 
+```sudo make install```. 
 
-You can start it by typing ``sudo ./fmberryd``.
+You can start it by typing ``sudo /etc/init.d/fmberry start``.
 
 To control the daemon you have to use ctlfmberry.
 
 It currently allows the following commands:
-* ``./ctlfmberry set freq 99000`` -- Frequency in kHz (76000 - 108000)
-* ``./ctlfmberry poweron``
-* ``./ctlfmberry poweroff``
-* ``./ctlfmberry set rdsid DEADBEEF`` (8 chars!)
-* ``./ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars)
+* ``ctlfmberry set freq 99000`` -- Frequency in kHz (76000 - 108000)
+* ``ctlfmberry poweron``
+* ``ctlfmberry poweroff``
+* ``ctlfmberry set rdsid DEADBEEF`` (8 chars!)
+* ``ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars)
 
 That's it! :)
 ###Step 7: Debugging
 FMBerry writes debugging output to /var/log/syslog.
 
-You can watch the information by running ``tail -f /var/log/syslog``.
+You can watch the information by running ``ctlfmberry log``. It's essentially just a ```cat /var/log/syslog | grep fmberryd```
 
 It will tell you what's wrong. 
 
+###Updating the software
+Just run ```git pull``` followed by a ```make``` and a ```sudo make install```.
+
 ##Notes
-* WARNING! I am not a professional C programmer. Please expect this software to have major security flaws such as buffer overflow and similar. Please don't expose it's control port to the internet!
+* WARNING! I am not a professional C programmer. Please expect this software to have major security flaws. Please don't expose it's control port to the internet! I'm fairly certain that this software is vulnerable to buffer overflows. 
+* If you are a C programmer, please help by securing this software and sending a pull request. 
+* 
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberryd.h) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
-*
+
 * You can also stream song information from a music player daemon via https://github.com/Manawyrm/FMBerryRDSMPD
-* 
+
 * Feel free to contact me: t.maedel@alfeld.de
 
 ##Common problems
