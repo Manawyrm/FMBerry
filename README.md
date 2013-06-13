@@ -116,11 +116,17 @@ You can start it by typing ``sudo /etc/init.d/fmberry start``.
 To control the daemon you have to use ctlfmberry.
 
 It currently allows the following commands:
-* ``ctlfmberry set freq 99000`` -- Frequency in kHz (76000 - 108000)
+* ``ctlfmberry set freq 99000`` - Frequency in kHz (76000 - 108000)
 * ``ctlfmberry poweron``
 * ``ctlfmberry poweroff``
 * ``ctlfmberry set rdsid DEADBEEF`` (8 chars!)
 * ``ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars)
+* ``ctlfmberry set txpwr 0`` - 0.5 mW Outputpower
+* ``ctlfmberry set txpwr 1`` - 0.8 mW Outputpower
+* ``ctlfmberry set txpwr 2`` - 1.0 mW Outputpower
+* ``ctlfmberry set txpwr 3`` - 2.0 mW Outputpower (Default.)
+* ``ctlfmberry muteon`` - Mute audio
+* ``ctlfmberry muteoff`` - Unmute audio
 
 That's it! :)
 ###Step 7: Debugging
