@@ -109,6 +109,7 @@ void ns741_power(uint8_t on)
  *
  * Thanks to Silvan König for init-sequence
  *************************************************************************/
+char reg02h = 0xCA;
 int ns741_init(void)
 {
 	TWI_init();
@@ -131,10 +132,6 @@ int ns741_init(void)
 	TWI_send(0x02, 0xCA);	//0x0A Sendeleistung
 	TWI_send(0x01, 0x81);
 
-	ns741_set_frequency(99000);
-
-	//enable transmission
-	ns741_power(1);
 	
 	//Initialize RPI lib for RDS interrupt pin
 	if (!bcm2835_init())
@@ -145,6 +142,54 @@ int ns741_init(void)
 	return 0;
 }
 
+void ns741_mute(uint8_t on)
+{
+	TWI_init();
+	if (on == 1 )
+	{
+		reg02h |= 1 << 0;
+		TWI_send(0x02, reg02h);	// mute active
+	}
+	else
+	{
+		reg02h &= ~(1 << 0);
+		TWI_send(0x02, reg02h);	// mute inactive
+	}
+	return;
+
+}
+
+void ns741_txpwr(uint8_t strength)
+{
+	TWI_init();
+	if (strength == 0)
+	{
+		reg02h &= ~(1 << 6);
+		reg02h &= ~(1 << 7);
+		TWI_send(0x02, reg02h);	
+	}
+	if (strength == 1)
+	{
+		reg02h |= 1 << 7;
+		reg02h &= ~(1 << 6);
+		TWI_send(0x02, reg02h);
+	}
+	if (strength == 2)
+	{
+		reg02h |= 1 << 6;
+		reg02h &= ~(1 << 7);
+		TWI_send(0x02, reg02h);
+	}
+	if (strength == 3)
+	{
+		reg02h |= 1 << 7;
+		reg02h |= 1 << 6;
+		TWI_send(0x02, reg02h);
+	}
+	return;
+
+}
+
 void RDSINT_vect()
 {
 	static uint8_t frame_counter = 0;
@@ -153,7 +198,6 @@ void RDSINT_vect()
 	
 	if (frame_counter == 0)
 	{
-		//Text segment address code
 		station_frames[17][2] = 0x20 | radiotext_counter;
 		i = radiotext_counter<<2; // *4
 		station_frames[18][1] = radiotext_text[i];
@@ -163,12 +207,10 @@ void RDSINT_vect()
 		
 		radiotext_counter = (radiotext_counter + 1) % 16;
 	}
-	/* Send next i2c-Frame */
 	TWI_send_word(station_frames[frame_counter][0],
 						  station_frames[frame_counter][1],
 					      station_frames[frame_counter][2]
 					      );
-	/* only 4+1 RDS-groups a 4+1 i2c-frames*/
 	frame_counter = (frame_counter + 1) % 20;
 	return;
 }

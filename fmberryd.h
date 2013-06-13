@@ -13,9 +13,9 @@
 #include <netinet/in.h>   //für INET_ADDRSTRLEN
 #include <string.h>       // für memset()
 #include <stdio.h>
+#include <confuse.h>
 
-#define PORT          (42516)
-
+cfg_t *cfg;
 int main(int argc, char **argv);
 void *TransmitRDS();
 void *ListenTCP();

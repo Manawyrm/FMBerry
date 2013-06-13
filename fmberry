@@ -1,0 +1,32 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          fmberry
+# Required-Start:    $time
+# Required-Stop:     $time
+# Default-Start:     2 3 4 5 S
+# Default-Stop:      0 1 6
+# Short-Description: FM transmitter firmware with NS741 (MMR70)
+# Description:       http://github.com/manawyrm/fmberry
+### END INIT INFO
+
+case "$1" in
+	start)
+		echo "Starting FMBerry ... "
+		/usr/local/bin/fmberryd
+	;;
+	stop)
+		echo "Killing FMBerry ..."
+		/usr/local/bin/ctlfmberry die
+	;;
+	restart)
+		echo "Restarting FMBerry ..."
+		/usr/local/bin/ctlfmberry die
+		/usr/local/bin/fmberryd
+	;;
+	*)
+exit 1
+;;
+esac
+exit 0
+

@@ -1,2 +1,7 @@
 #!/bin/sh
-echo -n "$@"|netcat 127.0.0.1 42516
+if [ $1 = "log" ]; then
+	cat /var/log/syslog | grep fmberryd
+else
+	echo -n "$@"|netcat 127.0.0.1 42516
+fi
+

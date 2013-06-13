@@ -12,5 +12,7 @@ void ns741_rds_set_radiotext(char *text);
 void ns741_rds_set_progname(char *text);
 int ns741_rds_start(void);
 void RDSINT_vect();
+void ns741_mute(uint8_t on);
+void ns741_txpwr(uint8_t strength);
 
 #endif
