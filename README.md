@@ -134,7 +134,9 @@ It will tell you what's wrong.
 Please check for new dependencies. You can safely just run the ```apt-get install``` command again. It will only install new dependencies if necessary.
 
 First stop the daemon by typing ```/etc/init.d/fmberry stop```. 
+
 Then run ```git pull``` followed by a ```make``` and a ```sudo make install```.
+
 You can then start FMBerry again with ```/etc/init.d/fmberry start```.
 ##Notes
 * WARNING! I am not a professional C programmer. Please expect this software to have major security flaws. Please don't expose it's control port to the internet! I'm fairly certain that this software is vulnerable to buffer overflows. 
