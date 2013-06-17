@@ -21,6 +21,7 @@ Begin by simply connecting these pins together:
 * SDA -- TP8
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
+* 75.76 cm long wire -- TP19 (antenna)
 
 __Very important!__
 
