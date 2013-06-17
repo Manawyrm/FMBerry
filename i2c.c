@@ -7,12 +7,15 @@ Thanks to Rsoft for helping me preserving my sanity in spite of my non-existant 
 Thanks to Paul Griffiths (1999) for his TCP socket helper.
 */
 
-int fd;													
-char *fileName = "/dev/i2c-1";						
-int  address = 0x66;			
+static int fd = -1;
+static const char *fileName = "/dev/i2c-1";						
+static int  address = 0x66;			
 
 int TWI_init()
 {
+	if (fd >= 0)
+		return 0; /* file already openned */
+		
 	if ((fd = open(fileName, O_RDWR)) < 0)
 	{
 		printf("Failed to open i2c port\n");
@@ -24,6 +27,8 @@ int TWI_init()
 		printf("Unable to get bus access to talk to slave\n");
 		exit(1);
 	}
+	
+	return 0;
 }
 
 uint8_t init_data[] =

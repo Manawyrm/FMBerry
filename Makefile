@@ -1,28 +1,29 @@
+CFLAGS = -g
+# uncomment to change optimization level
+# CFLAGS += -O2
+
 TARGET_DAEMON=fmberryd
-SRC=fmberry.c ns741.o i2c.o
-SRC_DAEMON=fmberryd.c ns741.o i2c.o
+OBJS = fmberryd.o ns741.o i2c.o
+LIBS = -lbcm2835 -lpthread -lconfuse
 
 all: fmberryd
 
-fmberryd: ns741
-		$(CC) -o $(TARGET_DAEMON) $(SRC_DAEMON) -l bcm2835 -l pthread -l confuse
-
-ns741: i2c
-		$(CC) -c -o ns741.o ns741.c
-
-i2c:
-		$(CC) -c -o i2c.o i2c.c
+fmberryd: $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET_DAEMON) $(OBJS) $(LIBS)
 
 clean:
-		$(RM) -f *.o $(TARGET_DAEMON)
+	$(RM) -f *.o $(TARGET_DAEMON)
 
+%.o: %.c Makefile
+	$(CC) -c $(CFLAGS) $< -o $@
+	
 install:
-		install  -m 644 fmberry.conf /etc/fmberry.conf
-		install fmberryd /usr/local/bin
-		install ctlfmberry /usr/local/bin
-		install fmberry /etc/init.d
+	install -m 644 fmberry.conf /etc/fmberry.conf
+	install fmberryd /usr/local/bin
+	install ctlfmberry /usr/local/bin
+	install fmberry /etc/init.d
 
 uninstall:
-		$(RM) /usr/local/bin/fmberryd
-		$(RM) /usr/local/bin/ctlfmberry
-		$(RM) /etc/init.d/fmberry
+	$(RM) /usr/local/bin/fmberryd
+	$(RM) /usr/local/bin/ctlfmberry
+	$(RM) /etc/init.d/fmberry

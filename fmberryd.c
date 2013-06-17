@@ -168,6 +168,14 @@ void *ListenTCP(void *arg)
 		syslog(LOG_NOTICE, "Binding to any interface.\n");
     	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
     }
+
+	//Important! Makes sure you can restart the daemon without any problems! 
+	const int       optVal = 1;
+	const socklen_t optLen = sizeof(optVal);
+
+	int rtn = setsockopt(lsd, SOL_SOCKET, SO_REUSEADDR, (void*) &optVal, optLen);
+
+	//assert(rtn == 0);   /* this is optional */
  
 	/* Socket an Port binden */
 	if( bind(lsd, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) {
@@ -175,14 +183,6 @@ void *ListenTCP(void *arg)
   		syslog(LOG_ERR, "Could not bind to TCP port! Terminated.\n");
   		exit(EXIT_FAILURE);
 	 }
-
-	 //Important! Makes sure you can restart the daemon without any problems! 
-	const int       optVal = 1;
-	const socklen_t optLen = sizeof(optVal);
-
-	int rtn = setsockopt(lsd, SOL_SOCKET, SO_REUSEADDR, (void*) &optVal, optLen);
-
-	//assert(rtn == 0);   /* this is optional */
 
   	syslog(LOG_NOTICE, "Successfully started daemon\n");
 	/* Auf Socket horchen (Listen) */
