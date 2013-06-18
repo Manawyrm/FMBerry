@@ -79,28 +79,32 @@ int ns741_rds_start(void)
 			      station_frames[0][1],
 			      station_frames[0][2]
 			     );
-
-
 }
+
 void ns741_set_frequency(uint32_t f_khz)
 {
 	TWI_init();
 	/* calculate frequency in 8.192kHz steps*/
 	uint16_t val = (uint16_t)((uint32_t)f_khz*1000ULL/8192ULL);
-	TWI_send(0x0A,		val);
+	TWI_send(0x0A, val);
 	TWI_send(0x0B, val >> 8);
 	//printf("\nSet frequency to  %lu(%lu) kHz \n", f_khz, val*8192UL/1000UL);
 	return;
 }
 
+// default register 0x00:
+//	bit 0 - power
+//	bit 1 - oscillator
+static uint8_t reg00h = 0x03;
 void ns741_power(uint8_t on)
 {
 	TWI_init();
-	if (on == 1 )
-		TWI_send(0x00, 0x03);	// module active
+	if (on == 1)
+		reg00h = 0x03;	// power + oscillator are active
 	else
-		TWI_send(0x00, 0x02);	// modul deactivate
+		reg00h = 0x02;	// power is off
 
+	TWI_send(0x00, reg00h);
 	return;
 }
 
@@ -109,7 +113,6 @@ void ns741_power(uint8_t on)
  *
  * Thanks to Silvan König for init-sequence
  *************************************************************************/
-char reg02h = 0xCA;
 int ns741_init(void)
 {
 	TWI_init();
@@ -131,63 +134,47 @@ int ns741_init(void)
 	TWI_send(0x08, 0x0E);
 	TWI_send(0x02, 0xCA);	//0x0A Sendeleistung
 	TWI_send(0x01, 0x81);
-
 	
 	//Initialize RPI lib for RDS interrupt pin
 	if (!bcm2835_init())
 		return 1;
 	//set RDS interrupt pin as input
 	bcm2835_gpio_fsel(RDSINT, BCM2835_GPIO_FSEL_INPT);
-	
 	return 0;
 }
+
+// default register 0x02: 
+//	RF output power 3 (bits 7-6)
+//	reserved bits 1 & 3 are set
+//	mute is off (bit 0)
+static uint8_t reg02h = 0xCA;
 
 void ns741_mute(uint8_t on)
 {
 	TWI_init();
-	if (on == 1 )
-	{
-		reg02h |= 1 << 0;
-		TWI_send(0x02, reg02h);	// mute active
-	}
-	else
-	{
-		reg02h &= ~(1 << 0);
-		TWI_send(0x02, reg02h);	// mute inactive
-	}
-	return;
 
+	if (on == 1 ) {
+		reg02h |= 1;
+	}
+	else {
+		reg02h &= ~1;
+	}
+	TWI_send(0x02, reg02h);
+
+	return;
 }
 
 void ns741_txpwr(uint8_t strength)
 {
 	TWI_init();
-	if (strength == 0)
-	{
-		reg02h &= ~(1 << 6);
-		reg02h &= ~(1 << 7);
-		TWI_send(0x02, reg02h);	
-	}
-	if (strength == 1)
-	{
-		reg02h |= 1 << 7;
-		reg02h &= ~(1 << 6);
-		TWI_send(0x02, reg02h);
-	}
-	if (strength == 2)
-	{
-		reg02h |= 1 << 6;
-		reg02h &= ~(1 << 7);
-		TWI_send(0x02, reg02h);
-	}
-	if (strength == 3)
-	{
-		reg02h |= 1 << 7;
-		reg02h |= 1 << 6;
-		TWI_send(0x02, reg02h);
-	}
-	return;
 
+	// clear RF power bits: set power level 0 - 0.5mW
+	reg02h &= ~0xC0;
+	strength &= 0x03; // just in case normalize strength
+	reg02h |= (strength << 6);
+	TWI_send(0x02, reg02h);
+
+	return;
 }
 
 void RDSINT_vect()
