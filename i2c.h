@@ -16,6 +16,6 @@
 int TWI_init();
 int TWI_send_word(uint8_t addr, uint8_t data0, uint8_t data1);
 int TWI_send(uint8_t addr, uint8_t data);
-int TWI_writeInitData();
+int TWI_writeData(uint8_t *data, uint32_t len);
 
 #endif
