@@ -44,8 +44,6 @@ To make sure I²C Support is loaded at boottime open /etc/modules.
 
 Add the following lines:
 
-``snd-bcm2835``
-
 ``i2c-dev``
 
 Then again, Save with Ctrl+O and then close nano with Ctrl+X.
@@ -57,16 +55,6 @@ First update your local package repository with
 
 then install all needed software with the following command:
 ``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
-
-Build and install the bcm2835 lib by issuing these commands:
-```
-wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.25.tar.gz
-tar zxvf bcm2835-1.25.tar.gz
-cd bcm2835-1.25
-./configure
-make
-sudo make install
-```
 
 ###Step 3: Finding out your hardware revision
 
@@ -119,14 +107,16 @@ It currently allows the following commands:
 * ``ctlfmberry set freq 99000`` - Frequency in kHz (76000 - 108000)
 * ``ctlfmberry poweron``
 * ``ctlfmberry poweroff``
-* ``ctlfmberry set rdsid DEADBEEF`` (8 chars!)
-* ``ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars)
+* ``ctlfmberry set rdsid DEADBEEF`` (8 chars! Longer strings will be truncated, shorter - padded with spaces)
+* ``ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark`` (max. 64 chars. Longer strings will be truncated)
 * ``ctlfmberry set txpwr 0`` - 0.5 mW Outputpower
 * ``ctlfmberry set txpwr 1`` - 0.8 mW Outputpower
 * ``ctlfmberry set txpwr 2`` - 1.0 mW Outputpower
 * ``ctlfmberry set txpwr 3`` - 2.0 mW Outputpower (Default.)
 * ``ctlfmberry muteon`` - Mute audio
 * ``ctlfmberry muteoff`` - Unmute audio
+* ``ctlfmberry status`` - Print current status
+* ``ctlfmberry stop`` - Stop FMBerry daemon
 
 That's it! :)
 ###Step 7: Debugging
