@@ -1,10 +1,21 @@
 #include "fmberryd.h"
+#include <poll.h>
 #include <stdlib.h>
 #include <syslog.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+
+#include "rpi_pin.h"
+
+#define RDSINT 17
+
+mmr70_data_t mmr70;
+
+static cfg_t *cfg;
+static volatile int run = 1;
+static int start_daemon = 1;
 
 /*
 FMBerry - an cheap and easy way of transmitting music with your Pi.
@@ -27,38 +38,50 @@ int main(int argc, char **argv)
 	  exit(EXIT_FAILURE);
 	}
 
-	//Init deamon
-	pid_t pid;
-
-	pid = fork();
-	if (pid < 0)
-	{
-		exit(EXIT_FAILURE);
-	}
-	if (pid > 0)
-	{
-		exit(EXIT_SUCCESS);
+	// check for non-daemon mode for debugging
+	for(int i = 1; i < argc; i++) {
+		if (str_is(argv[i], "nodaemon")) {
+			start_daemon = 0;
+			break;
+		}
 	}
 
-	umask(0);
+	if (start_daemon) {
+		//Init daemon, can be replaced with daemon() call
+		pid_t pid;
 
-	//We are now running as the forked child process.
-	openlog(argv[0],LOG_NOWAIT|LOG_PID,LOG_USER);
+		pid = fork();
+		if (pid < 0)
+		{
+			exit(EXIT_FAILURE);
+		}
+		if (pid > 0)
+		{
+			exit(EXIT_SUCCESS);
+		}
 
-	//closelog();
+		umask(0);
 
-	pid_t sid;
-	sid = setsid();
-	if (sid < 0)
-	{
-		syslog(LOG_ERR, "Could not create process group\n");
-		exit(EXIT_FAILURE);
+		//We are now running as the forked child process.
+		openlog(argv[0],LOG_NOWAIT|LOG_PID,LOG_USER);
+
+		pid_t sid;
+		sid = setsid();
+		if (sid < 0)
+		{
+			syslog(LOG_ERR, "Could not create process group\n");
+			exit(EXIT_FAILURE);
+		}
+
+		if ((chdir("/")) < 0) 
+		{
+			syslog(LOG_ERR, "Could not change working directory to /\n");
+			exit(EXIT_FAILURE);
+		}
 	}
-
-	if ((chdir("/")) < 0) 
-	{
-		syslog(LOG_ERR, "Could not change working directory to /\n");
-		exit(EXIT_FAILURE);
+	else {
+		// open syslog for non-daemon mode
+		openlog(argv[0],LOG_NOWAIT|LOG_PID,LOG_USER);
 	}
 
 	//Read configuration file
@@ -76,7 +99,7 @@ int main(int argc, char **argv)
 	};
 	
 	cfg = cfg_init(opts, CFGF_NONE);
-	if(cfg_parse(cfg, "/etc/fmberry.conf") == CFG_PARSE_ERROR)
+	if (cfg_parse(cfg, "/etc/fmberry.conf") == CFG_PARSE_ERROR)
 		return 1;
 	
 	//close(STDIN_FILENO);
@@ -90,66 +113,78 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	syslog(LOG_NOTICE, "Successfully initialized ns741 transmitter.\n");
+
+	int nfds;
+	struct pollfd  polls[2];
 	
-	//Set inital frequency and state.
-	ns741_set_frequency(cfg_getint(cfg, "frequency"));
-	ns741_txpwr(cfg_getint(cfg, "txpower"));
+	// open TCP listener socket, will exit() in case of error
+	int lst = ListenTCP(cfg_getint(cfg, "tcpport"));
+	polls[0].fd = lst;
+	polls[0].events = POLLIN;
+	nfds = 1;
 
+	// initialize data structure for 'status' command
+	bzero(&mmr70, sizeof(mmr70));
+	mmr70.frequency = cfg_getint(cfg, "frequency");
+	mmr70.power     = cfg_getbool(cfg, "poweron");
+	mmr70.txpower   = cfg_getint(cfg, "txpower");
+	mmr70.mute      = 0;
+	mmr70.rds       = cfg_getbool(cfg, "rdsenable");
+	strncpy(mmr70.rdsid, cfg_getstr(cfg, "rdsid"), 8);
+	strncpy(mmr70.rdstext, cfg_getstr(cfg, "rdstext"), 64);
+	
+	// Set initial frequency and state.
+	ns741_set_frequency(mmr70.frequency);
+	ns741_txpwr(mmr70.txpower);
 
-	if (cfg_getbool(cfg, "poweron"))
+	if (mmr70.power)
 	{
 		ns741_power(1);
 	}
 	
-	ns741_rds_set_progname(cfg_getstr(cfg, "rdsid"));
-	ns741_rds_set_radiotext(cfg_getstr(cfg, "rdstext"));
+	ns741_rds_set_progname(mmr70.rdsid);
+	ns741_rds_set_radiotext(mmr70.rdstext);
 
-
-	//Create and Start Threads for RDS interrupt handler and TCP listener
-	pthread_t RDSThread, TCPThread;
-
-	int rc;
-	if (cfg_getbool(cfg, "rdsenable"))
+	// Create and Start Thread for RDS interrupt handler
+	polls[1].revents = 0;
+	if (mmr70.rds)
 	{
-		rc = pthread_create( &RDSThread, NULL, &TransmitRDS, NULL );
-	    if( rc != 0 ) {
-	        printf("Couldn't create RDS Thread.\n");
-	        return EXIT_FAILURE;
+		int rds = rpi_pin_poll_enable(RDSINT, EDGE_FALLING);
+	    if (rds < 0) {
+	        printf("Couldn't enable RDS support\n");
+	        run = 0;
 	    }
+		polls[1].fd = rds;
+		polls[1].events = POLLPRI;
+		nfds = 2;
+		ns741_rds_start();
 	}
-	
 
-    rc = pthread_create( &TCPThread, NULL, &ListenTCP, NULL );
-    if( rc != 0 ) {
-        printf("Couldn't create TCP Thread.\n");
-        return EXIT_FAILURE;
-    }
+	// main polling loop
+	int led = 0;
+	while(run) {
+		if (poll(polls, nfds, -1) < 0)
+			break;
 
-    //Wait for both threads to end (which is not going to happen)
-    if (cfg_getbool(cfg, "rdsenable"))
-	{
-   		pthread_join( RDSThread, NULL );
-   	}
-
-	pthread_join( TCPThread, NULL );
-	return;
-}
-void *TransmitRDS(void *arg) 
-{
-    while (1)
-    {
-		// Read interrupt pin. (LOW when waiting for data.)
-		uint8_t value = bcm2835_gpio_lev(RDSINT);
-		if (value == 0)
-		{
-			RDSINT_vect();
+		if (polls[1].revents) {
+			rpi_pin_poll_clear(polls[1].fd);
+			ProcessRDS();
 		}
-		delay(10);
-    }
+
+		if (polls[0].revents)
+			ProcessTCP(lst, &mmr70);
+	}
+
+	if (mmr70.rds)
+		rpi_pin_unexport(RDSINT);
+
+	close(lst);
+	closelog();
+
+	return 0;
 }
 
-
-void *ListenTCP(void *arg)
+int ListenTCP(uint16_t port)
 {
 	/* Socket erstellen - TCP, IPv4, keine Optionen */
 	int lsd = socket(AF_INET, SOCK_STREAM, 0);
@@ -157,7 +192,7 @@ void *ListenTCP(void *arg)
 	/* IPv4, Port: 1111, jede IP-Adresse akzeptieren */
 	struct sockaddr_in saddr;
 	saddr.sin_family = AF_INET;
-	saddr.sin_port = htons(cfg_getint(cfg, "tcpport"));
+	saddr.sin_port = htons(port);
 	if (cfg_getbool(cfg, "tcpbindlocal"))
 	{
 		syslog(LOG_NOTICE, "Binding to localhost.\n");
@@ -178,7 +213,7 @@ void *ListenTCP(void *arg)
 	//assert(rtn == 0);   /* this is optional */
  
 	/* Socket an Port binden */
-	if( bind(lsd, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) {
+	if (bind(lsd, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) {
   		//whoops. Could not listen
   		syslog(LOG_ERR, "Could not bind to TCP port! Terminated.\n");
   		exit(EXIT_FAILURE);
@@ -187,109 +222,168 @@ void *ListenTCP(void *arg)
   	syslog(LOG_NOTICE, "Successfully started daemon\n");
 	/* Auf Socket horchen (Listen) */
 	listen(lsd, 10);
- 
-	while(1) {
-		/* Puffer und Strukturen anlegen */
-		struct sockaddr_in clientaddr;
-		char buffer[1000];
-		bzero(buffer, sizeof(buffer));
- 
-		/* Auf Verbindung warten, bei Verbindung Connected-Socket erstellen */
-		socklen_t clen = sizeof(clientaddr);
-		int csd = accept(lsd, (struct sockaddr*) &clientaddr, &clen);
- 
-		/* Vom Client lesen und ausgeben */
-		int bytes = recv(csd, buffer, sizeof(buffer), 0);
-		char *cmd;
-		
+	
+	return lsd;
+}
 
-		cmd = "set freq";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+// for 'status' command
+static float txpower[4] = { 0.5, 0.8, 1.0, 2.0 };
+
+int ProcessTCP(int sock, mmr70_data_t *pdata)
+{
+	/* Puffer und Strukturen anlegen */
+	struct sockaddr_in clientaddr;
+	socklen_t clen = sizeof(clientaddr);
+	char buffer[512];
+	bzero(buffer, sizeof(buffer));
+ 	
+	/* Auf Verbindung warten, bei Verbindung Connected-Socket erstellen */
+	int csd = accept(sock, (struct sockaddr *)&clientaddr, &clen);
+
+	struct pollfd  pol;
+	pol.fd = csd;
+	pol.events = POLLRDNORM;
+
+	// just to be on a safe side check if data is available
+	if (poll(&pol, 1, 1000) <= 0) {
+		close(csd);
+		return -1;
+	}
+
+	int len  = recv(csd, buffer, sizeof(buffer) - 2, 0);
+	buffer[len] = '\0';
+	char *end = buffer + len - 1;
+	// remove any trailing spaces
+	while((end != buffer) && (*end <= ' ')) {
+		*end-- = '\0';
+	}
+
+	do {
+		const char *arg;
+	
+		if (str_is_arg(buffer, "set freq", &arg))
 		{
-			int frequency;
-			sscanf(buffer, "set freq %d", &frequency);
+			int frequency = atoi(arg);
 
 			if ((frequency >= 76000) && (frequency <= 108000))
 			{
 				syslog(LOG_NOTICE, "Changing frequency...\n");
 				ns741_set_frequency(frequency);
+				pdata->frequency = frequency;
 			}
 			else
 			{
 				syslog(LOG_NOTICE, "Bad frequency.\n");
 			}
+			break;
 		}
 
-
-		cmd = "poweroff";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is(buffer, "poweroff"))
 		{
 			ns741_power(0);
+			pdata->power = 0;
+			break;
 		}
 
-		cmd = "poweron";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is(buffer, "poweron"))
 		{
 			ns741_power(1);
+			pdata->power = 1;
+			break;
 		}
 
-		cmd = "muteon";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is(buffer, "muteon"))
 		{
 			ns741_mute(1);
+			pdata->mute = 1;
+			break;
 		}
 
-		cmd = "muteoff";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is(buffer, "muteoff"))
 		{
 			ns741_mute(0);
+			pdata->mute = 0;
+			break;
 		}
 
-		cmd = "set txpwr";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is_arg(buffer, "set txpwr", &arg))
 		{
-			int txpwr;
-			sscanf(buffer, "set txpwr %d", &txpwr);
+			int txpwr = atoi(arg);
 
 			if ((txpwr >= 0) && (txpwr <= 3))
 			{
 				syslog(LOG_NOTICE, "Changing transmit power...\n");
 				ns741_txpwr(txpwr);
+				pdata->txpower = txpwr;
 			}
 			else
 			{
 				syslog(LOG_NOTICE, "Bad transmit power. Range 0-3\n");
 			}
+			break;
 		}
 
-		cmd = "set rdstext";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is_arg(buffer, "set rdstext", &arg))
 		{
-			ns741_rds_set_radiotext((buffer + 12));
-			//printf((buffer + 12));
+			strncpy(pdata->rdstext, arg, 64);
+			ns741_rds_set_radiotext(pdata->rdstext);
+			break;
 		}
 
-		cmd = "set rdsid";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is_arg(buffer, "set rdsid", &arg))
 		{
-			ns741_rds_set_progname((buffer + 10));
+			bzero(pdata->rdsid, sizeof(pdata->rdsid));
+			strncpy(pdata->rdsid, arg, 8);
+			// ns741_rds_set_progname() will pad rdsid with spaces if needed
+			ns741_rds_set_progname(pdata->rdsid);
+			break;
 		}
 
-
-		cmd = "die";
-		if (strncmp(buffer, cmd, strlen(cmd)) == 0)
+		if (str_is(buffer, "die") || str_is(buffer, "stop"))
 		{
+			run = 0;
 			syslog(LOG_NOTICE, "Shutting down.\n");
-			close(csd);
-			close(lsd);
-			exit(EXIT_SUCCESS);
+			break;
 		}
-		
- 		//printf("%s\n", buffer);
-		/* Verbindung schließen */
-		close(csd);
-	}
+
+		if (str_is(buffer, "status"))
+		{
+			bzero(buffer, sizeof(buffer));
+			sprintf(buffer, "freq: %dKHz txpwr: %.2fmW power: '%s' mute: '%s' rds: '%s' rdsid: '%s' rdstext: '%s'\n", 
+				pdata->frequency,
+				txpower[pdata->txpower],
+				pdata->power ? "on" : "off",
+				pdata->mute ? "on" : "off",
+				pdata->rds ? "on" : "off",
+				pdata->rdsid, pdata->rdstext);
+			write(csd, buffer, strlen(buffer) + 1);
+			break;
+		}
+
+	} while(0);
  
-	close(lsd);
-	return EXIT_SUCCESS;
+	close(csd);
+	return 0;
+}
+
+// helper string compare functions
+int str_is(const char *str, const char *is)
+{
+	if (strcmp(str, is) == 0)
+		return 1;
+	return 0;
+}
+
+int str_is_arg(const char *str, const char *is, const char **arg)
+{
+	size_t len = strlen(is);
+	if (strncmp(str, is, len) == 0) {
+		str = str + len;
+		// remove any leading spaces from the arg
+		while(*str && (*str <= ' '))
+			str++;
+		*arg = str;
+		return 1;
+	}
+	return 0;
 }
