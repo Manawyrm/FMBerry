@@ -1,10 +1,11 @@
 CFLAGS = -g
 # uncomment to change optimization level
 # CFLAGS += -O2
+CFLAGS += -std=gnu99
 
 TARGET_DAEMON=fmberryd
-OBJS = fmberryd.o ns741.o i2c.o
-LIBS = -lbcm2835 -lpthread -lconfuse
+OBJS = fmberryd.o ns741.o i2c.o rpi_pin.o
+LIBS = -lconfuse
 
 all: fmberryd
 
@@ -14,7 +15,7 @@ fmberryd: $(OBJS)
 clean:
 	$(RM) -f *.o $(TARGET_DAEMON)
 
-%.o: %.c Makefile
+%.o: %.c %.h Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 	
 install:
