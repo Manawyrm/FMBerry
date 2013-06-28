@@ -19,30 +19,21 @@ int TWI_init()
 	if ((fd = open(fileName, O_RDWR)) < 0)
 	{
 		printf("Failed to open i2c port\n");
-		exit(1);
+		return -1;
 	}
 	
 	if (ioctl(fd, I2C_SLAVE, address) < 0) 
 	{
 		printf("Unable to get bus access to talk to slave\n");
-		exit(1);
+		return -1;
 	}
 	
 	return 0;
 }
 
-uint8_t init_data[] =
+int TWI_writeData(uint8_t *data, uint32_t len)
 {
-	0x00, 0x02, 0x83, 0x0A, 
-	0x00, 0x00, 0x00, 0x00, 
-	0x7E, 0x0E, 0x08, 0x3F, 
-	0x2A, 0x0C, 0xE6, 0x3F, 
-	0x70, 0x0A, 0xE4, 0x00,
-	0x42, 0xC0, 0x41, 0xF4
-};
-int TWI_writeInitData()
-{
-	if ((write(fd, init_data, sizeof(init_data))) != sizeof(init_data)) {
+	if (write(fd, data, len) != len) {
 		return -1;
 	}
 	return 0;
