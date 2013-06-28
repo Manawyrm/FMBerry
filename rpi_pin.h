@@ -31,6 +31,9 @@
 extern "C" {
 #endif
 
+#define RPI_REV1 1
+#define RPI_REV2 2
+
 enum PIN_DIRECTION { INPUT, OUTPUT };
 enum PIN_EDGE_MODE { EDGE_NONE = 0, EDGE_RISING, EDGE_FALLING, EDGE_BOTH };
 
