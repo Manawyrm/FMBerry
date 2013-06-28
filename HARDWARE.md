@@ -21,12 +21,15 @@ Begin by simply connecting these pins together:
 * SDA -- TP8
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
-* 75.76 cm long wire -- TP19 (antenna)
+
+External antenna, a wire (300/(frequency in MHz) * 25) cm long, can be connected to TP19
 
 __Very important!__
 
 Now you need to disable the internal processor of the transmitter. This can be done easily by shorting on of it's crystal pins.
 To do this __connect TP18 to GND and TP2 to GND!__
+
+Be aware that MMR-70 can consume up to 27 mA, so make sure that you do not overload Raspberry Pi 3.3V supply (recommended maximim 3.3V current ~55mA) 
 
 Get yourself an old 3,5" phono plug. I've got mine from an old pair of cellphone speakers. 
 Connect it as following:
