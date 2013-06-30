@@ -78,7 +78,10 @@ Please remember that you need to run the command on another port on older revisi
 
 You should then see your transmitter at 0x66. 
 
-If you are not able to see your transmitter please double check your wiring! 
+If you are not able to see your transmitter please double check your wiring!
+
+If you connect you MMR-70 to I²C bus 0 on Raspberry Pi rev2 make sure that header P5 pins are configured as [I²C pins](http://www.raspberrypi.org/phpBB3/viewtopic.php?p=355638#p355638)!
+
 ![Output of i2cdetect](http://tbspace.de/holz/csuqzygpwb.png)
 
 ###Step 5: Building the software
@@ -89,7 +92,7 @@ git clone https://github.com/Manawyrm/FMBerry/
 cd FMBerry
 ```
 
-If you have got an old revision board, please open i2c.c and change the variable fileName to ``/dev/i2c-0``! 
+If you have got an old revision board, please open fmberryd.c and change the RPI_REVISION definition to ``RPI_REV1``! 
 
 ``make``
 
@@ -113,6 +116,8 @@ It currently allows the following commands:
 * ``ctlfmberry set txpwr 1`` - 0.8 mW Outputpower
 * ``ctlfmberry set txpwr 2`` - 1.0 mW Outputpower
 * ``ctlfmberry set txpwr 3`` - 2.0 mW Outputpower (Default.)
+* ``ctlfmberry stereo on`` - Enables stereo signal (Default)
+* ``ctlfmberry stereo off`` - Disables stereo signal
 * ``ctlfmberry muteon`` - Mute audio
 * ``ctlfmberry muteoff`` - Unmute audio
 * ``ctlfmberry status`` - Print current status

@@ -15,6 +15,7 @@ fmberryd: $(OBJS)
 clean:
 	$(RM) -f *.o $(TARGET_DAEMON)
 
+%.o: %.c %.h Makefile
 	$(CC) -c $(CFLAGS) $< -o $@
 	
 install:

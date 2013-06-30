@@ -21,7 +21,6 @@ Begin by simply connecting these pins together:
 * SDA -- TP8
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
-* 75.76 cm long wire -- TP19 (antenna)
 
 External antenna, a wire (300/(frequency in MHz) * 25) cm long, can be connected to TP19 or to TP20 - the only testpoint on back side of MMR-70
 
@@ -41,9 +40,10 @@ Connect it as following:
 
 [It should look like this.](http://tbspace.de/content/images/fmberrypics/2013-03-27%2016.19.48.jpg)
 
-
 [After soldering (and checking)](http://tbspace.de/content/images/fmberrypics/2013-03-27%2016.47.20.jpg)
 
 [plug it into your Raspberry Pi](http://tbspace.de/content/images/fmberrypics/2013-03-27%2016.49.48.jpg).
+
+[LED mod by Andrey Chilikin](http://achilikin.blogspot.ie/2013/06/sony-ericsson-mmr-70-transmitter-led.html)
 
 That's it! =)

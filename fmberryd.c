@@ -1,15 +1,23 @@
 #include "fmberryd.h"
+#include "rpi_pin.h"
+#include "ns741.h"
+
 #include <poll.h>
 #include <stdlib.h>
 #include <syslog.h>
-#include <netinet/in.h>
-#include <stdio.h>
 #include <string.h>
-#include <pthread.h>
+#include <unistd.h>
+#include <confuse.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
 
-#include "rpi_pin.h"
+#define RPI_REVISION RPI_REV2
 
-#define RDSINT 17
+// RDS interrupt pin
+int rdsint = 17;
+
+// LED pin number
+int ledpin = -1;
 
 mmr70_data_t mmr70;
 
@@ -87,27 +95,32 @@ int main(int argc, char **argv)
 	//Read configuration file
 	cfg_opt_t opts[] =
 	{
+		CFG_INT("i2cbus", 1, CFGF_NONE),
 		CFG_INT("frequency", 99800, CFGF_NONE),	    
+		CFG_BOOL("stereo", 1, CFGF_NONE),
 		CFG_BOOL("rdsenable", 1, CFGF_NONE),    
 		CFG_BOOL("poweron", 1, CFGF_NONE),    
 		CFG_BOOL("tcpbindlocal", 1, CFGF_NONE),  
 		CFG_INT("tcpport", 42516, CFGF_NONE),    
 		CFG_INT("txpower", 3, CFGF_NONE),    
+		CFG_INT("rdspin", 17, CFGF_NONE),
 		CFG_STR("rdsid", "", CFGF_NONE),
 		CFG_STR("rdstext", "", CFGF_NONE),
+		CFG_INT("ledpin", 27, CFGF_NONE),
 		CFG_END()
 	};
 	
 	cfg = cfg_init(opts, CFGF_NONE);
 	if (cfg_parse(cfg, "/etc/fmberry.conf") == CFG_PARSE_ERROR)
 		return 1;
-	
-	//close(STDIN_FILENO);
-	//close(STDOUT_FILENO);
-	//close(STDERR_FILENO);
 
-	//Init I2C bus and transmitter
-	if (ns741_init() == -1)
+	// get LED pin number
+	int led = 1; // led state
+	ledpin = cfg_getint(cfg, "ledpin");
+	rdsint = cfg_getint(cfg, "rdspin");
+
+	// Init I2C bus and transmitter
+	if (ns741_init(cfg_getint(cfg, "i2cbus")) == -1)
 	{
 		syslog(LOG_ERR, "Init failed! Double-check hardware and try again!\n");
 		exit(EXIT_FAILURE);
@@ -129,6 +142,7 @@ int main(int argc, char **argv)
 	mmr70.power     = cfg_getbool(cfg, "poweron");
 	mmr70.txpower   = cfg_getint(cfg, "txpower");
 	mmr70.mute      = 0;
+	mmr70.stereo    = cfg_getbool(cfg, "stereo");
 	mmr70.rds       = cfg_getbool(cfg, "rdsenable");
 	strncpy(mmr70.rdsid, cfg_getstr(cfg, "rdsid"), 8);
 	strncpy(mmr70.rdstext, cfg_getstr(cfg, "rdstext"), 64);
@@ -142,17 +156,20 @@ int main(int argc, char **argv)
 		ns741_power(1);
 	}
 	
+	if (!mmr70.stereo)
+		ns741_stereo(0);
+
 	ns741_rds_set_progname(mmr70.rdsid);
 	ns741_rds_set_radiotext(mmr70.rdstext);
 
 	// Use RPI_REV1 for earlier versions of Raspberry Pi
-	rpi_pin_init(RPI_REV2);
+	rpi_pin_init(RPI_REVISION);
 
 	// Get file descriptor for RDS handler
 	polls[1].revents = 0;
 	if (mmr70.rds)
 	{
-		int rds = rpi_pin_poll_enable(RDSINT, EDGE_FALLING);
+		int rds = rpi_pin_poll_enable(rdsint, EDGE_FALLING);
 	    if (rds < 0) {
 	        printf("Couldn't enable RDS support\n");
 	        run = 0;
@@ -160,11 +177,16 @@ int main(int argc, char **argv)
 		polls[1].fd = rds;
 		polls[1].events = POLLPRI;
 		nfds = 2;
+		ns741_rds(1);
+		if (ledpin > 0) {
+			rpi_pin_export(ledpin, RPI_OUTPUT);
+			rpi_pin_set(ledpin, led);
+		}
 		ns741_rds_start();
 	}
 
 	// main polling loop
-	int led = 0;
+	int ledcounter = 0;
 	while(run) {
 		if (poll(polls, nfds, -1) < 0)
 			break;
@@ -172,15 +194,30 @@ int main(int argc, char **argv)
 		if (polls[1].revents) {
 			rpi_pin_poll_clear(polls[1].fd);
 			ProcessRDS();
+			// flash LED if enabled on every other RDS refresh cycle
+			if (ledpin > 0) {
+				ledcounter++;
+				if (!(ledcounter % 80)) {
+					led ^= 1;
+					rpi_pin_set(ledpin, led);
+				}
+			}
 		}
 
 		if (polls[0].revents)
 			ProcessTCP(lst, &mmr70);
 	}
 
+	// clean up at exit
+	ns741_power(0);
 	if (mmr70.rds)
-		rpi_pin_unexport(RDSINT);
+		rpi_pin_unexport(rdsint);
 
+	if (ledpin > 0) {
+		rpi_pin_set(ledpin, 0);
+		rpi_pin_unexport(ledpin);
+	}
+	
 	close(lst);
 	closelog();
 
@@ -221,6 +258,7 @@ int ListenTCP(uint16_t port)
   		syslog(LOG_ERR, "Could not bind to TCP port! Terminated.\n");
   		exit(EXIT_FAILURE);
 	 }
+
   	syslog(LOG_NOTICE, "Successfully started daemon\n");
 	/* Auf Socket horchen (Listen) */
 	listen(lsd, 10);
@@ -290,6 +328,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		if (str_is(buffer, "poweron"))
 		{
 			ns741_power(1);
+			ns741_rds_start();
 			pdata->power = 1;
 			break;
 		}
@@ -305,6 +344,24 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		{
 			ns741_mute(0);
 			pdata->mute = 0;
+			break;
+		}
+
+		if (str_is_arg(buffer, "set stereo", &arg))
+		{
+			if (str_is(arg, "on"))
+			{
+				syslog(LOG_NOTICE, "Enabling stereo signal...\n");
+				ns741_stereo(1);
+				pdata->stereo = 1;
+				break;
+			}
+			if (str_is(arg, "off"))
+			{
+				syslog(LOG_NOTICE, "Disabling stereo signal...\n");
+				ns741_stereo(0);
+				pdata->stereo = 0;
+			}
 			break;
 		}
 
@@ -351,11 +408,12 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		if (str_is(buffer, "status"))
 		{
 			bzero(buffer, sizeof(buffer));
-			sprintf(buffer, "freq: %dKHz txpwr: %.2fmW power: '%s' mute: '%s' rds: '%s' rdsid: '%s' rdstext: '%s'\n", 
+			sprintf(buffer, "freq: %dKHz txpwr: %.2fmW power: '%s' mute: '%s' stereo: '%s' rds: '%s' rdsid: '%s' rdstext: '%s'\n", 
 				pdata->frequency,
 				txpower[pdata->txpower],
 				pdata->power ? "on" : "off",
 				pdata->mute ? "on" : "off",
+				pdata->stereo ? "on" : "off",
 				pdata->rds ? "on" : "off",
 				pdata->rdsid, pdata->rdstext);
 			write(csd, buffer, strlen(buffer) + 1);
