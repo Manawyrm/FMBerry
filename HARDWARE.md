@@ -21,7 +21,6 @@ Begin by simply connecting these pins together:
 * SDA -- TP8
 * SCL -- TP9
 * #17 -- TP6 (RDS Interrupt)
-* 75.76 cm long wire -- TP19 (antenna)
 
 External antenna, a wire (300/(frequency in MHz) * 25) cm long, can be connected to TP19 or to TP20 - the only testpoint on back side of MMR-70
 
