@@ -113,6 +113,8 @@ It currently allows the following commands:
 * ``ctlfmberry set txpwr 1`` - 0.8 mW Outputpower
 * ``ctlfmberry set txpwr 2`` - 1.0 mW Outputpower
 * ``ctlfmberry set txpwr 3`` - 2.0 mW Outputpower (Default.)
+* ``ctlfmberry stereo on`` - Enables stereo signal (Default)
+* ``ctlfmberry stereo off`` - Disables stereo signal
 * ``ctlfmberry muteon`` - Mute audio
 * ``ctlfmberry muteoff`` - Unmute audio
 * ``ctlfmberry status`` - Print current status
