@@ -1,4 +1,5 @@
 #include "ns741.h"
+#include "i2c.h"
 
 /*
 FMBerry - an cheap and easy way of transmitting music with your Pi.
@@ -7,6 +8,10 @@ Written 2013 by Tobias Mädel (t.maedel@alfeld.de)
 Thanks to Rsoft for helping me preserving my sanity in spite of my non-existant knowledge of C (writing of Makefile and C-Headers)
 Thanks to Paul Griffiths (1999) for his TCP socket helper.
 */
+
+// I2C address of MMR-70
+static const int address = 0x66;
+static int i2cbus = -1;
 
 //                        "----------------------------64----------------------------------"
 char radiotext_text[64] = "                                                                ";
@@ -88,7 +93,7 @@ void ns741_power(uint8_t on)
 	else
 		reg00h = 0x02;	// power is off
 
-	TWI_send(0x00, reg00h);
+	i2c_send(i2cbus, 0x00, reg00h);
 	return;
 }
 
@@ -99,34 +104,62 @@ void ns741_power(uint8_t on)
  *************************************************************************/
 static uint8_t init_data[] =
 {
-	0x00, 0x02, 0x83, 0x0A, 
-	0x00, 0x00, 0x00, 0x00, 
-	0x7E, 0x0E, 0x08, 0x3F, 
-	0x2A, 0x0C, 0xE6, 0x3F, 
-	0x70, 0x0A, 0xE4, 0x00,
-	0x42, 0xC0, 0x41, 0xF4
+	0x00, // start address 0
+	// default map for all 22 RW registers
+	0x02, 0x83, 0x0A, 0x00,
+	0x00, 0x00, 0x00, 0x7E,
+	0x0E, 0x08, 0x3F, 0x2A,
+	0x0C, 0xE6, 0x3F, 0x70,
+	0x0A, 0xE4, 0x00, 0x42,
+	0xC0, 0x41, 0xF4
 };
 
-int ns741_init(void)
+int ns741_init(uint8_t bus)
 {
-	if ((TWI_init() == -1) || (TWI_send(0x00, 0x00) == -1))
+	i2cbus = i2c_init(bus, address);
+	if ((i2cbus == -1) || (i2c_send(i2cbus, 0x00, 0x00) == -1))
 	{
 		return -1;
 	}
 
-	TWI_writeData(init_data, sizeof(init_data));
+	// reset registers to default values
+	i2c_writeData(i2cbus, init_data, sizeof(init_data));
 
-	TWI_send(0x02, 0x0B);
-	TWI_send(0x15, 0x11);
-	TWI_send(0x10, 0xE0);
+	i2c_send(i2cbus, 0x02, 0x0B);
+	i2c_send(i2cbus, 0x15, 0x11);
+//	i2c_send(i2cbus, 0x10, 0xE0); // we will turn on RDS signal depending on config file
 
 	// Configuration
-	TWI_send(0x07, 0x7E);
-	TWI_send(0x08, 0x0E);
-	TWI_send(0x02, 0xCA);	//0x0A Sendeleistung
-	TWI_send(0x01, 0x81);
+	i2c_send(i2cbus, 0x07, 0x7E);
+	i2c_send(i2cbus, 0x08, 0x0E);
+	i2c_send(i2cbus, 0x02, 0xCA); // unmute and set txpwr to 2.0 mW
+	i2c_send(i2cbus, 0x01, 0x81);
 	
 	return 0;
+}
+
+// register 0x01 controls stereo subcarrier and pilot: 
+//  bit 0: pre-emphasis on = 1
+//  bit 1: pre-emphasis selection: 0 - 50us, 1 - 75us
+//	bit 4: set to 1 to turn off subcarrier
+//	bit 7: set to 0 to turn off pilot tone
+// default: 0x81
+static uint8_t reg01h = 0x81;
+
+void ns741_stereo(uint8_t on)
+{
+	if (on) {
+		reg01h &= ~0x10; // enable subcarrier
+		reg01h |= 0x80;  // enable pilot tone
+	}
+	else {
+		reg01h |= 0x10;  // disable subcarrier
+		reg01h &= ~0x80; // disable pilot tone
+	}
+
+	i2c_send(i2cbus, 0x01, reg01h);
+
+	return;
 }
 
 // register 0x02 controls output power and mute: 
@@ -144,7 +177,7 @@ void ns741_mute(uint8_t on)
 	else {
 		reg02h &= ~1;
 	}
-	TWI_send(0x02, reg02h);
+	i2c_send(i2cbus, 0x02, reg02h);
 
 	return;
 }
@@ -156,7 +189,7 @@ void ns741_txpwr(uint8_t strength)
 	strength &= 0x03; // just in case normalize strength
 	reg02h |= (strength << 6);
 
-	TWI_send(0x02, reg02h);
+	i2c_send(i2cbus, 0x02, reg02h);
 
 	return;
 }
@@ -167,22 +200,48 @@ void ns741_set_frequency(uint32_t f_khz)
 	uint16_t val = (uint16_t)((uint32_t)f_khz*1000ULL/8192ULL);
 
 	// it is recommended to mute transmitter before changing frequency
-	TWI_send(0x02, reg02h & 0xFE);
+	i2c_send(i2cbus, 0x02, reg02h | 0x01);
 
-	TWI_send(0x0A, val);
-	TWI_send(0x0B, val >> 8);
+	i2c_send(i2cbus, 0x0A, val);
+	i2c_send(i2cbus, 0x0B, val >> 8);
 
 	// restore previous mute state
-	TWI_send(0x02, reg02h);
+	i2c_send(i2cbus, 0x02, reg02h);
 
 	//printf("\nSet frequency to  %lu(%lu) kHz \n", f_khz, val*8192UL/1000UL);
 	return;
 }
 
+// register 0x10 controls RDS: 
+//	reserved bits 0-5, with bit 5 set
+//	bit 6: 0 - RDS off, 1 - RDS on
+//  bit 7: RDS data format, 1 - with checkword
+// default: 0x90
+static uint8_t reg10h = 0x90;
+
+void ns741_rds(uint8_t on)
+{
+	if (on) {
+		reg10h |= 0x40;
+	}
+	else {
+		reg10h &= ~0x40;
+	}
+	i2c_send(i2cbus, 0x10, reg10h);
+
+	return;
+}
+
+static uint8_t frame_counter = 0;
+static uint8_t radiotext_counter = 0;
+
 // start RDS transmission
 int ns741_rds_start(void)
 {
-	return TWI_send_word(station_frames[0][0],
+	frame_counter = 0;
+	radiotext_counter = 0;
+
+	return i2c_send_word(i2cbus, station_frames[0][0],
 		station_frames[0][1],
 		station_frames[0][2]
 	);
@@ -191,12 +250,9 @@ int ns741_rds_start(void)
 // in total we sent 80 frames: 16 frames with Station Name and 64 with Radiotext
 void ProcessRDS(void)
 {
-	static uint8_t frame_counter = 0;
-	static uint8_t radiotext_counter = 0;
-
 	// first 16 frames - Station Name
 	if (frame_counter < 16) {
-		TWI_send_word(station_frames[frame_counter][0],
+		i2c_send_word(i2cbus, station_frames[frame_counter][0],
 			station_frames[frame_counter][1],
 			station_frames[frame_counter][2]
 		);
@@ -213,7 +269,7 @@ void ProcessRDS(void)
 			radiotext_counter = (radiotext_counter + 1) % 16;
 		}
 		i = frame_counter & 0x03;
-		TWI_send_word(text_frames[i][0],
+		i2c_send_word(i2cbus, text_frames[i][0],
 			text_frames[i][1],
 			text_frames[i][2]);
 	}
