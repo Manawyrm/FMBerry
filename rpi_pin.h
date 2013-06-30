@@ -34,7 +34,7 @@ extern "C" {
 #define RPI_REV1 1
 #define RPI_REV2 2
 
-enum PIN_DIRECTION { INPUT, OUTPUT };
+enum PIN_DIRECTION { RPI_INPUT, RPI_OUTPUT };
 enum PIN_EDGE_MODE { EDGE_NONE = 0, EDGE_RISING, EDGE_FALLING, EDGE_BOTH };
 
 // revision 1 - old, 2 - new, including P5 pins

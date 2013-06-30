@@ -94,9 +94,9 @@ int rpi_pin_export(uint8_t pin, enum PIN_DIRECTION dir)
 	}
 
 	pin_flags[pin] |= FPIN_EXPORTED;
-	if (dir == INPUT)
+	if (dir == RPI_INPUT)
 		pin_flags[pin] |= FPIN_DIR_INPUT;
-	fprintf(fd, (dir == INPUT) ? "in\n" : "out\n");
+	fprintf(fd, (dir == RPI_INPUT) ? "in\n" : "out\n");
 	fclose(fd);
 
 	sprintf(file, "/sys/class/gpio/gpio%d/value", pin);
@@ -122,7 +122,7 @@ int rpi_pin_set_dir(uint8_t pin, enum PIN_DIRECTION dir)
 		return -1;
 	}
 
-	if (dir == INPUT) {
+	if (dir == RPI_INPUT) {
 		pin_flags[pin] |= FPIN_DIR_INPUT;
 		fprintf(fd, "in\n");
 	}
@@ -219,7 +219,7 @@ int rpi_pin_poll_enable(uint8_t pin, enum PIN_EDGE_MODE mode)
 		return -1;
 
 	if (!(pin_flags[pin] & FPIN_EXPORTED))
-		rpi_pin_export(pin, INPUT);
+		rpi_pin_export(pin, RPI_INPUT);
 
 	if (pin_fds[pin] < 0)
 		return -1;
