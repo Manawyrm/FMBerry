@@ -79,7 +79,9 @@ Please remember that you need to run the command on another port on older revisi
 You should then see your transmitter at 0x66. 
 
 If you are not able to see your transmitter please double check your wiring!
+
 If you connect you MMR-70 to I²C bus 0 on Raspberry Pi rev2 make sure that header P5 pins are configured as [I²C pins](http://www.raspberrypi.org/phpBB3/viewtopic.php?p=355638#p355638)!
+
 ![Output of i2cdetect](http://tbspace.de/holz/csuqzygpwb.png)
 
 ###Step 5: Building the software
