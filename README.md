@@ -92,7 +92,7 @@ git clone https://github.com/Manawyrm/FMBerry/
 cd FMBerry
 ```
 
-If you have got an old revision board, please open i2c.c and change the variable fileName to ``/dev/i2c-0``! 
+If you have got an old revision board, please open fmberryd.c and change the RPI_REVISION definition to ``RPI_REV1``! 
 
 ``make``
 
