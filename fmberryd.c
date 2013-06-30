@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 
+#define RPI_REVISION RPI_REV2
+
 // RDS interrupt pin
 int rdsint = 17;
 
@@ -161,7 +163,7 @@ int main(int argc, char **argv)
 	ns741_rds_set_radiotext(mmr70.rdstext);
 
 	// Use RPI_REV1 for earlier versions of Raspberry Pi
-	rpi_pin_init(RPI_REV2);
+	rpi_pin_init(RPI_REVISION);
 
 	// Get file descriptor for RDS handler
 	polls[1].revents = 0;
