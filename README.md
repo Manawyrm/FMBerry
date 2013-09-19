@@ -54,8 +54,8 @@ First update your local package repository with
 ``sudo apt-get update``
 
 then install all needed software with the following command:
-``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
-
+``sudo apt-get install i2c-tools build-essential git libconfuse-dev i2c-bcm2708``
+ 
 ###Step 3: Finding out your hardware revision
 
 Run 
