@@ -23,6 +23,7 @@ install:
 	install fmberryd /usr/local/bin
 	install ctlfmberry /usr/local/bin
 	install fmberry /etc/init.d
+	update-rc.d fmberry defaults 
 
 uninstall:
 	$(RM) /usr/local/bin/fmberryd
