@@ -48,13 +48,15 @@ Add the following lines:
 
 Then again, Save with Ctrl+O and then close nano with Ctrl+X.
 
+Please reboot your Raspberry after this step. 
+
 ###Step 2: Installing I²C tools and dependencies for the build
 
 First update your local package repository with
 ``sudo apt-get update``
 
 then install all needed software with the following command:
-``sudo apt-get install i2c-tools build-essential git libconfuse-dev i2c-bcm2708``
+``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
  
 ###Step 3: Finding out your hardware revision
 
