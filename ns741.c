@@ -1,13 +1,21 @@
+/*
+	FMBerry - an cheap and easy way of transmitting music with your Pi.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "ns741.h"
 #include "i2c.h"
-
-/*
-FMBerry - an cheap and easy way of transmitting music with your Pi.
-Written 2013 by Tobias Mädel (t.maedel@alfeld.de)
-
-Thanks to Rsoft for helping me preserving my sanity in spite of my non-existant knowledge of C (writing of Makefile and C-Headers)
-Thanks to Paul Griffiths (1999) for his TCP socket helper.
-*/
 
 // I2C address of MMR-70
 static const int address = 0x66;
