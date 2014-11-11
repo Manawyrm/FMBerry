@@ -14,14 +14,16 @@ FMBerry is a piece of software that allows you to transmit FM radio with your Ra
 How does it work? 
 -------------
 It uses the Sony-Ericsson MMR-70 transmitter, which was originally intended for use with Sonys Walkman cellphones from early 2000s.
-You can get these for really cheap from ebay or Amazon (link below). (Less than 1 Euro with shipping in Germany)
+You can get these for really cheap from ebay or Amazon.
+If you live in the EU, contact me via Mail (fmberry@tbspace.de), I managed to get hold of quite a lot of these transmitters. 
+I can sell these for 0,50€/piece + 1,45€ international shipping, 0,80€ in germany. 
 
 What do I need to build this? 
 -------------
-* MMR-70 transmitter (http://www.amazon.de/Sony-DPY901634-Ericsson-MMR-70-FM-Transmitter/dp/B000UTMOF0)
+* MMR-70 transmitter
 * Raspberry Pi (Model A/B - 256MB or 512MB)
 * Soldering equipment (soldering iron and some solder)
-* Cable for connecting to your Raspis GPIO port (old IDE cable does work fine!)
+* Cable for connecting to your Raspberry Pis GPIO port (old IDE cable does work fine!)
 
 The hardware is explained here:
 [HARDWARE.md](https://github.com/Manawyrm/FMBerry/blob/master/HARDWARE.md#fmberry---hardware)
@@ -29,6 +31,9 @@ The hardware is explained here:
 Installation
 -------------
 This software was developed under Raspbian Wheezy 2013-02-09.
+
+## Arch Linux users: [AUR - fmberry-rpi-git](https://aur.archlinux.org/packages/fmberry-rpi-git/)
+
 ###Step 1: Enabling I²C
 
 Open raspi-blacklist.conf:
@@ -148,9 +153,13 @@ You can then start FMBerry again with ```/etc/init.d/fmberry start```.
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberryd.h) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
 
-* You can also stream song information from a music player daemon via https://github.com/Manawyrm/FMBerryRDSMPD
-
 * Feel free to contact me: t.maedel@alfeld.de (english and german) 
+
+## Projects using FMBerry
+
+https://github.com/Manawyrm/FMBerryRDSMPD (streaming of MPD title data via RDS)
+https://github.com/akkinitsch/FMBerryRemote (streaming of internet radio streams, controllable via Webinterface)
+http://achilikin.blogspot.de/2013/06/sony-ericsson-mmr-70-transmitter-led.html (enabling the LED on the transmitter to be software controllable)
 
 ##Common problems
 __The daemon does not show anything.__
