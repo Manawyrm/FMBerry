@@ -144,7 +144,6 @@ You can then start FMBerry again with ```/etc/init.d/fmberry start```.
 ##Notes
 * WARNING! I am not a professional C programmer. Please expect this software to have major security flaws. Please don't expose it's control port to the internet! I'm fairly certain that this software is vulnerable to buffer overflows. 
 * If you are a C programmer, please help by securing this software and sending a pull request. 
-* 
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberryd.h) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
 
