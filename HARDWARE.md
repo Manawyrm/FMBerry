@@ -3,7 +3,8 @@ FMBerry - Hardware
 To build the FMBerry transmitter, 
 you just need to connect specific testpoints on the PCB of the MMR70 to your Raspberry Pi.
 
-Thanks to Oliver J. (skriptkiddy) for the schematics and the photo with all labeled testpoints.
+Thanks to Oliver J. (skriptkiddy) for the schematics and the photo with all named testpoints.
+Thanks to Andrey Chilikin for the excellent photo with all testpoints labeled.
 
 [Schematic of the MMR-70](http://www.mikrocontroller.net/attachment/140251/MMR70.pdf)
 
