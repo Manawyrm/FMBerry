@@ -15,8 +15,9 @@ How does it work?
 -------------
 It uses the Sony-Ericsson MMR-70 transmitter, which was originally intended for use with Sonys Walkman cellphones from early 2000s.
 You can get these for really cheap from ebay or Amazon.
-If you live in the EU, contact me via Mail (fmberry@tbspace.de), I managed to get hold of quite a lot of these transmitters. 
-I can sell these for 0,50€/piece + shipping.
+
+If you can't seem to get one, contact me via Mail (fmberry@tbspace.de), I managed to get hold of quite a lot of these transmitters. 
+I can sell these for 1€/piece + shipping.
 
 What do I need to build this? 
 -------------
