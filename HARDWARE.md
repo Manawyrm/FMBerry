@@ -7,6 +7,8 @@ Thanks to Oliver J. (skriptkiddy) for the schematics and the photo with all labe
 
 [Schematic of the MMR-70](http://www.mikrocontroller.net/attachment/140251/MMR70.pdf)
 
+![Testpoints](http://3.bp.blogspot.com/-n_ohkJBPz-Y/U4kBKn4AZ4I/AAAAAAAAASc/p6EYkGonyuY/s1600/mmr-070-1024.jpg)
+
 ![Testpoints](http://tbspace.de/content/images/fmberrypics/testpins.jpg)
 
 ![Used raspberry pi pins](http://tbspace.de/content/images/fmberrypics/usedpins.png)
