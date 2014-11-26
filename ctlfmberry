@@ -1,7 +1,25 @@
 #!/bin/sh
-if [ $1 = "log" ]; then
-	cat /var/log/syslog | grep fmberryd
+if [ "$1" = "log" ]; then
+        cat /var/log/syslog | grep fmberryd
 else
-	echo -n "$@"|netcat 127.0.0.1 42516
+        if [ "$1" = "" ] || [ "$1" = "help" ] || [ "$1" = "--help" ]; then
+                echo "ctlfmberry usage:"
+                echo "  ctlfmberry set freq 99000 - Frequency in kHz (76000 - 108000)"
+                echo "  ctlfmberry poweron"
+                echo "  ctlfmberry poweroff"
+                echo "  ctlfmberry set rdsid DEADBEEF (8 chars! Longer strings will be truncated, shorter - padded with spaces)"
+                echo "  ctlfmberry set rdstext Mike Oldfield - Pictures in the Dark (max. 64 chars. Longer strings will be truncated)"
+                echo "  ctlfmberry set txpwr 0 - 0.5 mW Outputpower"
+                echo "  ctlfmberry set txpwr 1 - 0.8 mW Outputpower"
+                echo "  ctlfmberry set txpwr 2 - 1.0 mW Outputpower"
+                echo "  ctlfmberry set txpwr 3 - 2.0 mW Outputpower (Default)"
+                echo "  ctlfmberry stereo on - Enables stereo signal (Default)"
+                echo "  ctlfmberry stereo off - Disables stereo signal"
+                echo "  ctlfmberry muteon - Mute audio"
+                echo "  ctlfmberry muteoff - Unmute audio"
+                echo "  ctlfmberry status - Print current status"
+                echo "  ctlfmberry stop - Stop FMBerry daemon"
+        else
+                echo -n "$@"|netcat 127.0.0.1 42516
+        fi
 fi
-
