@@ -25,6 +25,8 @@ typedef struct _mmr70_data
 	int frequency;
 	int power;
 	int mute;
+	int gain;
+	int volume;
 	int txpower;
 	int stereo;
 	int rds;
