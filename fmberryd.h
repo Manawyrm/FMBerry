@@ -42,7 +42,6 @@ int main(int argc, char **argv);
 int str_is(const char *str, const char *is);
 int str_is_arg(const char *str, const char *is, const char **arg);
 
-void *TransmitRDS();
 int ListenTCP(uint16_t port);
 int ProcessTCP(int sock, mmr70_data_t *pdata);
 #endif
