@@ -21,6 +21,11 @@
 static const int address = 0x66;
 static int i2cbus = -1;
 
+#define NS741_DEFAULT_F 99800 // default F=99.80MHz
+
+// Calculates value of P for 0A/0B registers
+#define NS741_FREQ(F) ((uint16_t)((uint32_t)F*1000ULL/8192ULL))
+
 //                        "----------------------------64----------------------------------"
 char radiotext_text[64] = "                                                                ";
 // *hrr hrr*              "Twilight Sparkle is best Pony.                                  "
@@ -110,19 +115,34 @@ void ns741_power(uint8_t on)
  *
  * Thanks to Silvan König for init-sequence
  *************************************************************************/
+// Initial register state, some change applied to 
+// recommended values from TSMZ1-603 spec
 static uint8_t init_data[] =
 {
-	0x00, // start address 0
+	0x00, // start address for i2c_send_data()
 	// default map for all 22 RW registers
-	0x02, 0x83, 0x0A, 0x00,
-	0x00, 0x00, 0x00, 0x7E,
-	0x0E, 0x08, 0x3F, 0x2A,
-	0x0C, 0xE6, 0x3F, 0x70,
-	0x0A, 0xE4, 0x00, 0x42,
-	0xC0, 0x41, 0xF4
+	0x02, // 00h: Power OFF, Crystal ON
+	0xE1, // 01h: PE switch ON, PE selection 50us (Europe), Subcarrier ON, Pilot Level 1.6
+	0x0A, // 02h: RFG 0.5 mW, Mute ON
+	0x00, 0x00, 0x00, 0x00, // 03h-06h: RDS registers
+	0x7E, 0x0E, // 07h-08h: recommended default
+	0x08, // 09h: recommended default
+	(NS741_FREQ(NS741_DEFAULT_F) & 0xFF), // 0Ah-0Bh, frequency
+	((NS741_FREQ(NS741_DEFAULT_F) & 0xFF00) >> 8),
+	0x0C, // 0Ch: recommended default
+	0xE0, // 0Dh: ALC (Auto Level Control) OFF, AG (Audio Gain) -9dB
+	0x30, // 0Eh: recommended default
+	0x40, // 0Fh: input Audio Gain -9dB
+	0xA0, // 10h: RDS with checkword, RDS disabled
+	0xE4, // 11h: recommended default
+	0x00, // 12h: recommended default
+	0x42, // 13h: recommended default
+	0xC0, // 14h: recommended default
+	0x41, // 15h: recommended default
+	0xF4  // 16h: recommended default
 };
 
-int ns741_init(uint8_t bus)
+int ns741_init(uint8_t bus, uint32_t f_khz)
 {
 	i2cbus = i2c_init(bus, address);
 	if ((i2cbus == -1) || (i2c_send(i2cbus, 0x00, 0x00) == -1))
@@ -130,19 +150,13 @@ int ns741_init(uint8_t bus)
 		return -1;
 	}
 
+	// set specified frequency
+	init_data[11] = NS741_FREQ(f_khz) & 0x00FF;
+	init_data[12] = (NS741_FREQ(f_khz) & 0xFF00) >> 8;
+
 	// reset registers to default values
-	i2c_writeData(i2cbus, init_data, sizeof(init_data));
+	i2c_send_data(i2cbus, init_data, sizeof(init_data));
 
-	i2c_send(i2cbus, 0x02, 0x0B);
-	i2c_send(i2cbus, 0x15, 0x11);
-//	i2c_send(i2cbus, 0x10, 0xE0); // we will turn on RDS signal depending on config file
-
-	// Configuration
-	i2c_send(i2cbus, 0x07, 0x7E);
-	i2c_send(i2cbus, 0x08, 0x0E);
-	i2c_send(i2cbus, 0x02, 0xCA); // unmute and set txpwr to 2.0 mW
-	i2c_send(i2cbus, 0x01, 0x81);
-	
 	return 0;
 }
 
@@ -205,7 +219,7 @@ void ns741_txpwr(uint8_t strength)
 void ns741_set_frequency(uint32_t f_khz)
 {
 	/* calculate frequency in 8.192kHz steps*/
-	uint16_t val = (uint16_t)((uint32_t)f_khz*1000ULL/8192ULL);
+	uint16_t val = NS741_FREQ(f_khz);
 
 	// it is recommended to mute transmitter before changing frequency
 	i2c_send(i2cbus, 0x02, reg02h | 0x01);
@@ -218,6 +232,33 @@ void ns741_set_frequency(uint32_t f_khz)
 
 	//printf("\nSet frequency to  %lu(%lu) kHz \n", f_khz, val*8192UL/1000UL);
 	return;
+}
+
+// output gain 0-6, or -9dB to +9db, 3dB step
+void ns741_volume(uint8_t gain)
+{
+	uint8_t reg = init_data[0x0D];
+	if (gain > 6)
+		gain = 6;
+	reg &= ~0x0E;
+	reg |= gain << 1;
+	init_data[0x0D] = reg;
+
+	i2c_send(i2cbus, 0x0D, reg);
+}
+
+// set input gain -9dB on/off
+void ns741_input_gain(uint8_t on)
+{
+	uint8_t reg = init_data[0x0F];
+
+	if (on)
+		reg |= 0x40;
+	else
+		reg &= ~0x40;
+	init_data[0x0F] = reg;
+
+	i2c_send(i2cbus, 0x0F, reg);
 }
 
 // register 0x10 controls RDS: 

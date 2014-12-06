@@ -19,12 +19,14 @@
 
 #include <stdint.h>
 
-int  ns741_init(uint8_t i2c_bus);
+int  ns741_init(uint8_t i2c_bus, uint32_t f_khz);
 void ns741_set_frequency(uint32_t f_khz);
 void ns741_power(uint8_t on);
 void ns741_mute(uint8_t on);
 void ns741_txpwr(uint8_t strength);
 void ns741_stereo(uint8_t on);
+void ns741_volume(uint8_t gain);
+void ns741_input_gain(uint8_t on);
 
 void ns741_rds(uint8_t on);
 int  ns741_rds_start(void);

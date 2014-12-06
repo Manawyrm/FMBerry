@@ -17,6 +17,9 @@ else
                 echo "  ctlfmberry stereo off - Disables stereo signal"
                 echo "  ctlfmberry muteon - Mute audio"
                 echo "  ctlfmberry muteoff - Unmute audio"
+                echo "  ctlfmberry gainlow - Audio gain -9dB"
+                echo "  ctlfmberry gainoff - Audio gain 0dB"
+                echo "  ctlfmberry set volume 0-6 Audio volume level 0 to 6, equal -9dB to +9db, 3dB step"
                 echo "  ctlfmberry status - Print current status"
                 echo "  ctlfmberry stop - Stop FMBerry daemon"
         else
