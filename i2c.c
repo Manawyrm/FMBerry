@@ -1,7 +1,7 @@
 /*
 	FMBerry - an cheap and easy way of transmitting music with your Pi.
     Copyright (C) 2011-2013 by Tobias Mädel (t.maedel@alfeld.de)
-	Copyright (C) 2013      by Andrey Chilikin (https://github.com/achilikin)
+	Copyright (C) 2013-2014 by Andrey Chilikin (https://github.com/achilikin)
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <alloca.h>
+#include <memory.h>
 #include <linux/i2c-dev.h>
 
 int i2c_init(uint8_t bus, uint8_t address)
@@ -49,11 +51,15 @@ int i2c_select(int dev, uint8_t address)
 	return ioctl(dev, I2C_SLAVE, address);
 }
 
-int i2c_send_data(int dev, uint8_t *data, uint32_t len)
+int i2c_send_data(int dev, uint8_t addr, uint8_t *data, uint32_t len)
 {
-	if (write(dev, data, len) != len) {
+	uint8_t *buf = (uint8_t *)alloca(len+1);
+	memcpy(buf +1, data, len);
+	buf[0] = addr;
+	len++;
+
+	if (write(dev, buf, len) != len)
 		return -1;
-	}
 	return 0;
 }
 
@@ -68,12 +74,13 @@ int i2c_send(int dev, uint8_t addr, uint8_t data)
 	return 0;
 }
 
-int i2c_send_word(int dev, uint8_t addr, uint8_t data0, uint8_t data1)
+// send 16 bit, MSB first
+int i2c_send_word(int dev, uint8_t addr, uint8_t *data)
 {
 	char buf[3];										
 	buf[0] = addr;					
-	buf[1] = data0;
-	buf[2] = data1;
+	buf[1] = data[1];
+	buf[2] = data[0];
 	if ((write(dev, buf, 3)) != 3) {
 		return -1;
 	}
