@@ -127,6 +127,9 @@ It currently allows the following commands:
 * ``ctlfmberry stereo off`` - Disables stereo signal
 * ``ctlfmberry muteon`` - Mute audio
 * ``ctlfmberry muteoff`` - Unmute audio
+* ``ctlfmberry gainlow`` - Audio gain -9dB
+* ``ctlfmberry gainoff`` - Audio gain 0dB"
+* ``ctlfmberry set volume 0-6`` Audio volume level 0 to 6, equal -9dB to +9db, 3dB step
 * ``ctlfmberry status`` - Print current status
 * ``ctlfmberry stop`` - Stop FMBerry daemon
 

@@ -159,11 +159,10 @@ int main(int argc, char **argv)
 	// apply configuration parameters
 	ns741_txpwr(mmr70.txpower);
 	ns741_mute(mmr70.mute);
-	ns741_power(mmr70.power);
 	ns741_stereo(mmr70.stereo);
 	ns741_rds_set_progname(mmr70.rdsid);
 	ns741_rds_set_radiotext(mmr70.rdstext);
-
+	ns741_power(mmr70.power);
 	// Use RPI_REV1 for earlier versions of Raspberry Pi
 	rpi_pin_init(RPI_REVISION);
 
@@ -179,12 +178,13 @@ int main(int argc, char **argv)
 		polls[1].fd = rds;
 		polls[1].events = POLLPRI;
 		nfds = 2;
-		ns741_rds(1);
 		if (ledpin > 0) {
 			rpi_pin_export(ledpin, RPI_OUTPUT);
 			rpi_pin_set(ledpin, led);
 		}
-		ns741_rds_start();
+
+		ns741_rds(1);
+		ns741_rds_isr(); // send first two bytes
 	}
 
 	// main polling loop
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
 
 		if (polls[1].revents) {
 			rpi_pin_poll_clear(polls[1].fd);
-			ProcessRDS();
+			ns741_rds_isr();
 			// flash LED if enabled on every other RDS refresh cycle
 			if (ledpin > 0) {
 				ledcounter++;
@@ -330,7 +330,8 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		if (str_is(buffer, "poweron"))
 		{
 			ns741_power(1);
-			ns741_rds_start();
+			ns741_rds(1);
+			ns741_rds_reset_radiotext();
 			pdata->power = 1;
 			break;
 		}
@@ -428,6 +429,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 			strncpy(pdata->rdsid, arg, 8);
 			// ns741_rds_set_progname() will pad rdsid with spaces if needed
 			ns741_rds_set_progname(pdata->rdsid);
+			ns741_rds_reset_radiotext();
 			break;
 		}
 
