@@ -179,3 +179,15 @@ Did you install all dependencies? (All lines with apt-get)
 __The transmissions dies after a couple of minutes.__
 
 You didn't disable the internal processor of the MMR70. Do this by connecting TP18 to GND.
+
+__The power supply of the raspberry pi shorts out/there are no lights anymore___
+
+There is a short circuit. Probably caused by a wiring fault or by using an 80pin IDE cable for connecting the FMBerry. 
+__Alternative linux distributions don't detect the I2C bus (ArchLinux, OpenWRT, OSMC)__
+
+Linux 3.18 introduced a new feature called Device Tree support. To get the I²C Bus working, you need to put this configuration at the end of /boot/config.txt: 
+device_tree=bcm2708-rpi-b-plus.dtb
+device_tree_param=i2c1=on
+device_tree_param=spi=on
+(change the first parameter according to the RPi you have)
+Thanks to Daniel for the solution to that problem! 
