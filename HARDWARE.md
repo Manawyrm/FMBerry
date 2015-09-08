@@ -14,7 +14,7 @@ Thanks to Andrey Chilikin for the excellent photo with all testpoints labeled.
 
 ![Used raspberry pi pins](http://tbspace.de/content/images/fmberrypics/usedpins.png)
 
-Old IDE or Floppy Cable does an excellent job for connecting to your Pi. 
+Old IDE (40pin!) or Floppy Cable does an excellent job for connecting to your Pi. 
 Begin by simply connecting these pins together:
 
 * GND -- TP18
