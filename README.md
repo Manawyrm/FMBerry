@@ -176,7 +176,7 @@ __I am getting compile errors.__
 
 Did you install all dependencies? (All lines with apt-get)
 
-__The transmissions dies after a couple of minutes.__
+__The transmission dies after a couple of minutes.__
 
 You didn't disable the internal processor of the MMR70. Do this by connecting TP18 to GND.
 
