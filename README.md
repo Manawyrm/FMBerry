@@ -182,7 +182,9 @@ You didn't disable the internal processor of the MMR70. Do this by connecting TP
 
 __The power supply of the raspberry pi shorts out/there are no lights anymore___
 
-There is a short circuit. Probably caused by a wiring fault or by using an 80pin IDE cable for connecting the FMBerry. 
+There is a short circuit. Probably caused by a wiring fault or by using an 80pin IDE cable for connecting the FMBerry.
+
+
 __Alternative linux distributions don't detect the I2C bus (ArchLinux, OpenWRT, OSMC)__
 
 Linux 3.18 introduced a new feature called Device Tree support. To get the I²C Bus working, you need to put this configuration at the end of /boot/config.txt (change the first parameter according to the RPi you have): 
