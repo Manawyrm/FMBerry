@@ -1,0 +1,11 @@
+[Unit]
+Description=FMBerry
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fmberryd
+ExecStop=/usr/local/bin/ctlfmberry die
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
