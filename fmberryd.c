@@ -163,6 +163,8 @@ int main(int argc, char **argv)
 	ns741_rds_set_progname(mmr70.rdsid);
 	ns741_rds_set_radiotext(mmr70.rdstext);
 	ns741_power(mmr70.power);
+	ns741_input_gain(mmr70.gain);
+        ns741_volume(mmr70.volume);
 	// Use RPI_REV1 for earlier versions of Raspberry Pi
 	rpi_pin_init(RPI_REVISION);
 
