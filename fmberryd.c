@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 
-		if ((chdir("/")) < 0) 
+		if ((chdir("/")) < 0)
 		{
 			syslog(LOG_ERR, "Could not change working directory to /\n");
 			exit(EXIT_FAILURE);
@@ -101,12 +101,12 @@ int main(int argc, char **argv)
 	cfg_opt_t opts[] =
 	{
 		CFG_INT("i2cbus", 1, CFGF_NONE),
-		CFG_INT("frequency", 99800, CFGF_NONE),	    
+		CFG_INT("frequency", 99800, CFGF_NONE),
 		CFG_BOOL("stereo", 1, CFGF_NONE),
-		CFG_BOOL("rdsenable", 1, CFGF_NONE),    
-		CFG_BOOL("poweron", 1, CFGF_NONE),    
-		CFG_BOOL("tcpbindlocal", 1, CFGF_NONE),  
-		CFG_INT("tcpport", 42516, CFGF_NONE),    
+		CFG_BOOL("rdsenable", 1, CFGF_NONE),
+		CFG_BOOL("poweron", 1, CFGF_NONE),
+		CFG_BOOL("tcpbindlocal", 1, CFGF_NONE),
+		CFG_INT("tcpport", 42516, CFGF_NONE),
 		CFG_INT("txpower", 3, CFGF_NONE),
 		CFG_BOOL("gain", 0, CFGF_NONE),
 		CFG_INT("volume", 3, CFGF_NONE),
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 		CFG_INT("ledpin", 27, CFGF_NONE),
 		CFG_END()
 	};
-	
+
 	cfg = cfg_init(opts, CFGF_NONE);
 	if (cfg_parse(cfg, "/etc/fmberry.conf") == CFG_PARSE_ERROR)
 		return 1;
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 
 	int nfds;
 	struct pollfd  polls[2];
-	
+
 	// open TCP listener socket, will exit() in case of error
 	int lst = ListenTCP(cfg_getint(cfg, "tcpport"));
 	polls[0].fd = lst;
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 	mmr70.rds       = cfg_getbool(cfg, "rdsenable");
 	strncpy(mmr70.rdsid, cfg_getstr(cfg, "rdsid"), 8);
 	strncpy(mmr70.rdstext, cfg_getstr(cfg, "rdstext"), 64);
-	
+
 	// apply configuration parameters
 	ns741_txpwr(mmr70.txpower);
 	ns741_mute(mmr70.mute);
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 	ns741_rds_set_radiotext(mmr70.rdstext);
 	ns741_power(mmr70.power);
 	ns741_input_gain(mmr70.gain);
-        ns741_volume(mmr70.volume);
+    ns741_volume(mmr70.volume);
 	// Use RPI_REV1 for earlier versions of Raspberry Pi
 	rpi_pin_init(RPI_REVISION);
 
@@ -221,7 +221,7 @@ int main(int argc, char **argv)
 		rpi_pin_set(ledpin, 0);
 		rpi_pin_unexport(ledpin);
 	}
-	
+
 	close(lst);
 	closelog();
 
@@ -232,7 +232,7 @@ int ListenTCP(uint16_t port)
 {
 	/* Socket erstellen - TCP, IPv4, keine Optionen */
 	int lsd = socket(AF_INET, SOCK_STREAM, 0);
- 
+
 	/* IPv4, Port: 1111, jede IP-Adresse akzeptieren */
 	struct sockaddr_in saddr;
 	saddr.sin_family = AF_INET;
@@ -248,14 +248,14 @@ int ListenTCP(uint16_t port)
     	saddr.sin_addr.s_addr = htonl(INADDR_ANY);
     }
 
-	//Important! Makes sure you can restart the daemon without any problems! 
+	//Important! Makes sure you can restart the daemon without any problems!
 	const int       optVal = 1;
 	const socklen_t optLen = sizeof(optVal);
 
 	int rtn = setsockopt(lsd, SOL_SOCKET, SO_REUSEADDR, (void*) &optVal, optLen);
 
 	//assert(rtn == 0);   /* this is optional */
- 
+
 	/* Socket an Port binden */
 	if (bind(lsd, (struct sockaddr*) &saddr, sizeof(saddr)) < 0) {
   		//whoops. Could not listen
@@ -266,7 +266,7 @@ int ListenTCP(uint16_t port)
   	syslog(LOG_NOTICE, "Successfully started daemon\n");
 	/* Auf Socket horchen (Listen) */
 	listen(lsd, 10);
-	
+
 	return lsd;
 }
 
@@ -280,7 +280,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 	socklen_t clen = sizeof(clientaddr);
 	char buffer[512];
 	bzero(buffer, sizeof(buffer));
- 	
+
 	/* Auf Verbindung warten, bei Verbindung Connected-Socket erstellen */
 	int csd = accept(sock, (struct sockaddr *)&clientaddr, &clen);
 
@@ -304,7 +304,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 
 	do {
 		const char *arg;
-	
+
 		if (str_is_arg(buffer, "set freq", &arg))
 		{
 			int frequency = atoi(arg);
@@ -445,7 +445,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		if (str_is(buffer, "status"))
 		{
 			bzero(buffer, sizeof(buffer));
-			sprintf(buffer, "freq: %dKHz txpwr: %.2fmW power: '%s' mute: '%s' gain: '%s' volume: '%d' stereo: '%s' rds: '%s' rdsid: '%s' rdstext: '%s'\n", 
+			sprintf(buffer, "freq: %dKHz txpwr: %.2fmW power: '%s' mute: '%s' gain: '%s' volume: '%d' stereo: '%s' rds: '%s' rdsid: '%s' rdstext: '%s'\n",
 				pdata->frequency,
 				txpower[pdata->txpower],
 				pdata->power ? "on" : "off",
@@ -460,7 +460,7 @@ int ProcessTCP(int sock, mmr70_data_t *pdata)
 		}
 
 	} while(0);
- 
+
 	close(csd);
 	return 0;
 }
