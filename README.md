@@ -21,7 +21,7 @@ If you can't seem to get one, contact me via Mail (fmberry@tbspace.de), I manage
 What do I need to build this? 
 -------------
 * MMR-70 transmitter
-* Raspberry Pi (Model A/B - 256MB or 512MB)
+* Raspberry Pi (compatible & tested with every Pi, Model Beta, A, B, B+, 2, Zero, 3)
 * Soldering equipment (soldering iron and some solder)
 * Cable for connecting to your Raspberry Pis GPIO port (old IDE cable does work fine!)
 
