@@ -34,7 +34,7 @@ This software was developed under Raspbian Wheezy 2013-02-09.
 
 ## Arch Linux users: [AUR - fmberry-rpi-git](https://aur.archlinux.org/packages/fmberry-rpi-git/)
 
-###Step 1: Enabling I²C
+### Step 1: Enabling I²C
 
 Open raspi-blacklist.conf:
 
@@ -55,7 +55,7 @@ Then again, Save with Ctrl+O and then close nano with Ctrl+X.
 
 Please reboot your Raspberry after this step. 
 
-###Step 2: Installing I²C tools and dependencies for the build
+### Step 2: Installing I²C tools and dependencies for the build
 
 First update your local package repository with
 ``sudo apt-get update``
@@ -63,7 +63,7 @@ First update your local package repository with
 then install all needed software with the following command:
 ``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
  
-###Step 3: Finding out your hardware revision
+### Step 3: Finding out your hardware revision
 
 Run 
 ``cat /proc/cpuinfo | grep "CPU revision"``
@@ -73,7 +73,7 @@ All Raspberry Pi's with a revision newer than rev. 2 have their i2c port connect
 
 Older devices (beta, alpha, early 256MB Model B's) have it connected up to /dev/i2c-0. 
 
-###Step 4: Checking the hardware
+### Step 4: Checking the hardware
 
 You can check your wiring with the following command:
 
@@ -91,7 +91,7 @@ If you connect you MMR-70 to I²C bus 0 on Raspberry Pi rev2 make sure that head
 
 ![Output of i2cdetect](http://tbspace.de/holz/csuqzygpwb.png)
 
-###Step 5: Building the software
+### Step 5: Building the software
 To build the software execute the following commands (in your homefolder):
 
 ```
@@ -104,7 +104,7 @@ If you have got an old revision board, please open fmberryd.c and change the RPI
 ``make``
 
 Compiling the software will take a couple of seconds.
-###Step 6: Installing the software
+### Step 6: Installing the software
 FMBerry is essentially a daemon called fmberryd.
 To install it into your system path type 
 ```sudo make install```. 
@@ -134,14 +134,14 @@ It currently allows the following commands:
 * ``ctlfmberry stop`` - Stop FMBerry daemon
 
 That's it! :)
-###Step 7: Debugging
+### Step 7: Debugging
 FMBerry writes debugging output to /var/log/syslog.
 
 You can watch the information by running ``ctlfmberry log``. It's essentially just a ```cat /var/log/syslog | grep fmberryd```
 
 It will tell you what's wrong. 
 
-###Updating the software
+### Updating the software
 Please check for new dependencies. You can safely just run the ```apt-get install``` command again. It will only install new dependencies if necessary.
 
 First stop the daemon by typing ```/etc/init.d/fmberry stop```. 
@@ -149,7 +149,7 @@ First stop the daemon by typing ```/etc/init.d/fmberry stop```.
 Then run ```git pull``` followed by a ```make``` and a ```sudo make install```.
 
 You can then start FMBerry again with ```/etc/init.d/fmberry start```.
-##Notes
+## Notes
 * WARNING! I am not a professional C programmer. Please expect this software to have major security flaws. Please don't expose it's control port to the internet! I'm fairly certain that this software is vulnerable to buffer overflows. 
 * If you are a C programmer, please help by securing this software and sending a pull request. 
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberry.conf) You can control it by sending the exact same commands you would give to ctlfmberry.
@@ -163,7 +163,7 @@ https://github.com/Manawyrm/FMBerryRDSMPD (streaming of MPD title data via RDS)
 https://github.com/akkinitsch/FMBerryRemote (streaming of internet radio streams, controllable via Webinterface)
 http://achilikin.blogspot.de/2013/06/sony-ericsson-mmr-70-transmitter-led.html (enabling the LED on the transmitter to be software controllable)
 
-##Common problems
+## Common problems
 __The daemon does not show anything.__
 
 That's normal. You have to use ./ctlfmberry to control the daemon.
