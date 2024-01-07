@@ -1,6 +1,6 @@
 /*
 	FMBerry - an cheap and easy way of transmitting music with your Pi.
-    Copyright (C) 2011-2013 by Tobias Mädel (t.maedel@alfeld.de)
+    Copyright (C) 2011-2013 by Manawyrm
 	Copyright (C) 2013      by Andrey Chilikin (achilikin@gmail.com)
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

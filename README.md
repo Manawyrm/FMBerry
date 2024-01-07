@@ -1,9 +1,7 @@
 ![FMBerry Logo](http://tbspace.de/holz/uzsjpoghdq.png)
 FMBerry
 =======
-> Written by Tobias Mädel (t.maedel@alfeld.de)
-
-> http://tbspace.de
+> Written by Manawyrm
 
 What is this? 
 -------------
@@ -154,8 +152,6 @@ You can then start FMBerry again with ```/etc/init.d/fmberry start```.
 * If you are a C programmer, please help by securing this software and sending a pull request. 
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberry.conf) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
-
-* Feel free to contact me: t.maedel@alfeld.de (english and german) 
 
 ## Projects using FMBerry
 
