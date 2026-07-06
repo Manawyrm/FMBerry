@@ -30,20 +30,9 @@ This software was developed under Raspbian Wheezy 2013-02-09. Tested on Raspbian
 
 ### Step 1: Enabling I²C
 
-Run raspi config to enable I²C support
+Run raspi-config to enable I²C support
 
-``sudo raspi-config``
-
-Under `3 Interface Options` enable I2C under `I5 I2C`.
-To make sure I²C Support is loaded at boottime open /etc/modules.
-
-``sudo nano /etc/modules``
-
-Add the following lines:
-
-``i2c-dev``
-
-Save with Ctrl+O and then close nano with Ctrl+X.
+``sudo raspi-config nonint do_i2c 0``
 
 Please reboot your Raspberry after this step. 
 
