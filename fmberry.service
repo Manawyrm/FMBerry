@@ -2,10 +2,8 @@
 Description=FMBerry
 
 [Service]
-Type=oneshot
-ExecStart=/usr/local/bin/fmberryd
-ExecStop=/usr/local/bin/ctlfmberry die
-RemainAfterExit=yes
+Type=simple
+ExecStart=/usr/local/bin/fmberryd nodaemon
 
 [Install]
 WantedBy=multi-user.target
