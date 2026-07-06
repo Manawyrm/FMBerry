@@ -23,6 +23,7 @@
 #include <alloca.h>
 #include <memory.h>
 #include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
 int i2c_init(uint8_t bus, uint8_t address)
 {

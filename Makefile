@@ -5,7 +5,7 @@ CFLAGS += -std=gnu99
 
 TARGET_DAEMON=fmberryd
 OBJS = fmberryd.o ns741.o i2c.o rpi_pin.o
-LIBS = -lconfuse
+LIBS = -lconfuse -lgpiod
 
 all: fmberryd
 
@@ -22,8 +22,8 @@ install:
 	install -m 644 fmberry.conf /etc/fmberry.conf
 	install fmberryd /usr/local/bin
 	install ctlfmberry /usr/local/bin
-	install fmberry /etc/init.d
-	update-rc.d fmberry defaults 
+	install fmberry.service /etc/systemd/system
+	systemctl daemon-reload
 
 uninstall:
 	$(RM) /usr/local/bin/fmberryd

@@ -24,19 +24,17 @@ The hardware is explained here:
 
 Installation
 -------------
-This software was developed under Raspbian Wheezy 2013-02-09.
+This software was developed under Raspbian Wheezy 2013-02-09. Tested on Raspbian Trixie.
 
 ## Arch Linux users: [AUR - fmberry-rpi-git](https://aur.archlinux.org/packages/fmberry-rpi-git/)
 
 ### Step 1: Enabling I²C
 
-Open raspi-blacklist.conf:
+Run raspi config to enable I²C support
 
-``sudo nano /etc/modprobe.d/raspi-blacklist.conf``
+``sudo raspi-config``
 
-Comment out the Line "``blacklist i2c-bcm2708``" with a #.
-Save with Ctrl+O and close nano with Ctrl+X
-
+Under `3 Interface Options` enable I2C under `I5 I2C`.
 To make sure I²C Support is loaded at boottime open /etc/modules.
 
 ``sudo nano /etc/modules``
@@ -45,7 +43,7 @@ Add the following lines:
 
 ``i2c-dev``
 
-Then again, Save with Ctrl+O and then close nano with Ctrl+X.
+Save with Ctrl+O and then close nano with Ctrl+X.
 
 Please reboot your Raspberry after this step. 
 
@@ -55,7 +53,7 @@ First update your local package repository with
 ``sudo apt-get update``
 
 then install all needed software with the following command:
-``sudo apt-get install i2c-tools build-essential git libconfuse-dev``
+``sudo apt-get install i2c-tools build-essential git libconfuse-dev libgpiod-dev``
  
 ### Step 3: Finding out your hardware revision
 
@@ -93,8 +91,6 @@ git clone https://github.com/Manawyrm/FMBerry/
 cd FMBerry
 ```
 
-If you have got an old revision board, please open fmberryd.c and change the RPI_REVISION definition to ``RPI_REV1``! 
-
 ``make``
 
 Compiling the software will take a couple of seconds.
@@ -103,7 +99,7 @@ FMBerry is essentially a daemon called fmberryd.
 To install it into your system path type 
 ```sudo make install```. 
 
-You can start it by typing ``sudo /etc/init.d/fmberry start``.
+You can start it by typing ``sudo systemctl start fmberry``.
 
 To control the daemon you have to use ctlfmberry.
 
@@ -129,20 +125,20 @@ It currently allows the following commands:
 
 That's it! :)
 ### Step 7: Debugging
-FMBerry writes debugging output to /var/log/syslog.
+FMBerry writes debugging output to the systemlog
 
-You can watch the information by running ``ctlfmberry log``. It's essentially just a ```cat /var/log/syslog | grep fmberryd```
+You can watch the information by running ``ctlfmberry log``. It's essentially just a ```journalctl -fu fmberry```
 
 It will tell you what's wrong. 
 
 ### Updating the software
 Please check for new dependencies. You can safely just run the ```apt-get install``` command again. It will only install new dependencies if necessary.
 
-First stop the daemon by typing ```/etc/init.d/fmberry stop```. 
+First stop the daemon by typing ```sudo systemctl stop fmberry```. 
 
 Then run ```git pull``` followed by a ```make``` and a ```sudo make install```.
 
-You can then start FMBerry again with ```/etc/init.d/fmberry start```.
+You can then start FMBerry again with ```sudo systemctl start fmberry```.
 ## Notes
 * The Daemon itself is essentially a simple TCP server. It is listening to Port 42516. (set in fmberry.conf) You can control it by sending the exact same commands you would give to ctlfmberry.
 * For information on How to control the Daemon have a look into ctlfmberry. It's a simple shell script.
