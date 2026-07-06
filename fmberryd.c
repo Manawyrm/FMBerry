@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "fmberryd.h"
-#include "rpi_pin.h"
 #include "ns741.h"
 
 #include <poll.h>
@@ -27,20 +26,72 @@
 #include <confuse.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <errno.h>
+#include <gpiod.h>
 
-#define RPI_REVISION RPI_REV2
+#define GPIOCHIP "/dev/gpiochip0"
 
 // RDS interrupt pin
 int rdsint = 17;
-
-// LED pin number
-int ledpin = -1;
 
 mmr70_data_t mmr70;
 
 static cfg_t *cfg;
 static volatile int run = 1;
 static int start_daemon = 1;
+
+static struct gpiod_line_request *request_input_line(unsigned int offset, const char *consumer) {
+    struct gpiod_request_config *req_cfg = NULL;
+	struct gpiod_line_request *request = NULL;
+	struct gpiod_line_settings *settings;
+	struct gpiod_line_config *line_cfg;
+	struct gpiod_chip *chip;   
+    int ret;
+
+    chip = gpiod_chip_open(GPIOCHIP);
+	if (!chip)
+		return NULL;
+
+	settings = gpiod_line_settings_new();
+	if (!settings)
+		goto close_chip;
+
+    gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_INPUT);
+    gpiod_line_settings_set_edge_detection(settings, GPIOD_LINE_EDGE_FALLING);
+    gpiod_line_settings_set_bias(settings, GPIOD_LINE_BIAS_PULL_UP);
+
+    line_cfg = gpiod_line_config_new();
+	if (!line_cfg)
+		goto free_settings;
+
+	ret = gpiod_line_config_add_line_settings(line_cfg, &offset, 1,
+						  settings);
+	if (ret)
+		goto free_line_config;
+
+	if (consumer) {
+		req_cfg = gpiod_request_config_new();
+		if (!req_cfg)
+			goto free_line_config;
+
+		gpiod_request_config_set_consumer(req_cfg, consumer);
+	}
+
+	request = gpiod_chip_request_lines(chip, req_cfg, line_cfg);
+
+	gpiod_request_config_free(req_cfg);
+
+free_line_config:
+	gpiod_line_config_free(line_cfg);
+
+free_settings:
+	gpiod_line_settings_free(settings);
+
+close_chip:
+	gpiod_chip_close(chip);
+
+	return request;
+}
 
 int main(int argc, char **argv)
 {
@@ -113,7 +164,6 @@ int main(int argc, char **argv)
 		CFG_INT("rdspin", 17, CFGF_NONE),
 		CFG_STR("rdsid", "", CFGF_NONE),
 		CFG_STR("rdstext", "", CFGF_NONE),
-		CFG_INT("ledpin", 27, CFGF_NONE),
 		CFG_END()
 	};
 
@@ -122,8 +172,6 @@ int main(int argc, char **argv)
 		return 1;
 
 	// get LED pin number
-	int led = 1; // led state
-	ledpin = cfg_getint(cfg, "ledpin");
 	rdsint = cfg_getint(cfg, "rdspin");
 
 	// Init I2C bus and transmitter with initial frequency and state
@@ -165,62 +213,57 @@ int main(int argc, char **argv)
 	ns741_power(mmr70.power);
 	ns741_input_gain(mmr70.gain);
     ns741_volume(mmr70.volume);
-	// Use RPI_REV1 for earlier versions of Raspberry Pi
-	rpi_pin_init(RPI_REVISION);
 
-	// Get file descriptor for RDS handler
-	polls[1].revents = 0;
-	if (mmr70.rds)
-	{
-		int rds = rpi_pin_poll_enable(rdsint, EDGE_FALLING);
-	    if (rds < 0) {
-	        printf("Couldn't enable RDS support\n");
-	        run = 0;
-	    }
-		polls[1].fd = rds;
-		polls[1].events = POLLPRI;
-		nfds = 2;
-		if (ledpin > 0) {
-			rpi_pin_export(ledpin, RPI_OUTPUT);
-			rpi_pin_set(ledpin, led);
-		}
-
-		ns741_rds(1);
-		ns741_rds_isr(); // send first two bytes
-	}
+    struct gpiod_edge_event_buffer *event_buffer;
+	struct gpiod_line_request *request;
+    int event_buf_size;
+    if (mmr70.rds) {
+        polls[1].revents = 0;
+        request = request_input_line(rdsint, "watch-rds-interrupt");
+        if (!request) {
+            fprintf(stderr, "failed to request line: %s\n",
+                strerror(errno));
+            run = 0;
+        }
+        event_buf_size = 1;
+        event_buffer = gpiod_edge_event_buffer_new(event_buf_size);
+        if (!event_buffer) {
+            fprintf(stderr, "failed to create event buffer: %s\n",
+                strerror(errno));
+            return EXIT_FAILURE;
+        }
+        polls[1].fd = gpiod_line_request_get_fd(request);
+        polls[1].events = POLLPRI | POLLIN;
+        nfds = 2;
+        ns741_rds(1);
+        ns741_rds_isr(); // send first two bytes
+    }
 
 	// main polling loop
-	int ledcounter = 0;
+    int ret;
 	while(run) {
-		if (poll(polls, nfds, -1) < 0)
+		if (poll(polls, nfds, -1) < 0) {
 			break;
-
+        }
 		if (polls[1].revents) {
-			rpi_pin_poll_clear(polls[1].fd);
-			ns741_rds_isr();
-			// flash LED if enabled on every other RDS refresh cycle
-			if (ledpin > 0) {
-				ledcounter++;
-				if (!(ledcounter % 80)) {
-					led ^= 1;
-					rpi_pin_set(ledpin, led);
-				}
-			}
+            ret = gpiod_line_request_read_edge_events(request, event_buffer, event_buf_size);
+            if (ret == -1) {
+                fprintf(stderr, "error reading edge events: %s\n",
+                    strerror(errno));
+                run = 0;
+            } 
+            ns741_rds_isr();
 		}
-
 		if (polls[0].revents)
 			ProcessTCP(lst, &mmr70);
 	}
 
 	// clean up at exit
 	ns741_power(0);
-	if (mmr70.rds)
-		rpi_pin_unexport(rdsint);
-
-	if (ledpin > 0) {
-		rpi_pin_set(ledpin, 0);
-		rpi_pin_unexport(ledpin);
-	}
+	if (mmr70.rds) {
+        gpiod_line_request_release(request);
+        gpiod_edge_event_buffer_free(event_buffer);
+    }
 
 	close(lst);
 	closelog();
