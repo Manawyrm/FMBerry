@@ -1,6 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -euo pipefail
+
 if [ "$1" = "log" ]; then
-    journalctl -u fmberry
+    journalctl -fu fmberry
 else
         if [ "$1" = "" ] || [ "$1" = "help" ] || [ "$1" = "--help" ]; then
                 echo "ctlfmberry usage:"
